@@ -1,4 +1,4 @@
-﻿# ModFramework for Software Inc
+# ModFramework for Software Inc
 
 ![Software Inc](https://img.shields.io/badge/Game-Software_Inc-blue?style=for-the-badge&logo=steam) ![Unity 2019.4](https://img.shields.io/badge/Unity-2019.4-black?style=for-the-badge&logo=unity) ![License](https://img.shields.io/badge/License-MIT-success?style=for-the-badge)
 
@@ -16,26 +16,7 @@ You get the native Software Inc look and feel, but with the ease of a modern C# 
 
 ---
 
-## Table of Contents
 
-1. [Quick Start](#quick-start)
-2. [Installation](#installation)
-3. [Core Utilities](#core-utilities)
-4. [Custom UI Overview](#custom-ui-overview)
-5. [GameTheme (Auto-Theming)](#gametheme)
-6. [Windows](#windows)
-7. [Basic Widgets](#basic-widgets)
-8. [Input Widgets](#input-widgets)
-9. [Layout Widgets](#layout-widgets)
-10. [Data Views](#data-views)
-11. [Charts](#charts)
-12. [Overlays and Dialogs](#overlays-and-dialogs)
-13. [Advanced Widgets](#advanced-widgets)
-14. [Gotchas and Tips](#gotchas-and-tips)
-15. [Architecture](#architecture)
-16. [Production Examples](#production-examples)
-
----
 
 ## Quick Start
 
