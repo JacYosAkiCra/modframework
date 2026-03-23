@@ -8,7 +8,7 @@ A complete UI and utility framework for building Software Inc mods.
 Modding the user interface in Software Inc can be difficult for beginners. The base game uses complex native prefabs and `WindowManager` calls that are hard to modify or extend. 
 The **ModFramework** solves this by providing 31 custom UI components (buttons, labels, windows, charts, lists, etc.) built entirely from code that **automatically theme themselves to look exactly like the base game.** 
 
-You get the native Software Inc look and feel, but with the ease of a modern C# framework. You don't need to load any prefabs, and you don't need to do any complex math to position things—everything uses Unity's automatic layout groups!
+You get the native Software Inc look and feel, but with the ease of a modern C# framework. You don't need to load any prefabs, and you don't need to do any complex math to position things-everything uses Unity's automatic layout groups!
 
 **Namespace:** `ModFramework.UI.Custom` (UI) / `ModFramework.Core` (utilities)
 **Requires:** Unity 2019.4 (game's engine), .NET Framework 4.x
