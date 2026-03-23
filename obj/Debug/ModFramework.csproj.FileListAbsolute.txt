@@ -1,0 +1,2 @@
+C:\Users\veesa\OneDrive\Documents\Visual Studio 2022\SoftwareIncMods\SoftwareIncMods\ModFramework\obj\Debug\ModFramework.csproj.AssemblyReference.cache
+C:\Users\veesa\OneDrive\Documents\Visual Studio 2022\SoftwareIncMods\SoftwareIncMods\ModFramework\obj\Debug\ModFramework.csproj.CoreCompileInputs.cache
