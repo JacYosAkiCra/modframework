@@ -1,0 +1,97 @@
+using System;
+using UnityEngine;
+using ModFramework.Core;
+using ModFramework.GameData;
+
+// ============================================================================
+// {MOD_NAME} - Main Mod Entry Point
+// ============================================================================
+// This file is the main entry point for your mod. Software Inc will
+// automatically create an instance of this class when the game loads.
+//
+// HOW IT WORKS:
+//   1. Awake() runs once when your mod is first loaded.
+//   2. OnGameReady() runs when the player opens or loads a save.
+//   3. OnDayPassed() runs once per in-game day (great for periodic logic).
+//   4. OnGameExit() runs when the player returns to the main menu.
+//
+// IMPORTANT:
+//   - Do NOT put heavy logic in Awake(). It runs before the game is ready.
+//   - Use OnGameReady() to create windows, read company data, etc.
+//   - All lifecycle events are wrapped in try/catch, so one crash won't
+//     break the rest of the game.
+// ============================================================================
+
+namespace {MOD_NAME}
+{
+    public class {MOD_NAME}Behaviour : ModBehaviour
+    {
+        // =====================================================
+        // Step 1: Awake - Mod is loaded (game may not be ready)
+        // =====================================================
+        private void Awake()
+        {
+            // Set up logging prefix so all your log messages are tagged
+            ModLogger.SetPrefix("{MOD_NAME}");
+            ModSettings.SetPrefix("{MOD_NAME}");
+
+            // Subscribe to lifecycle events
+            // These are safe - if the game isn't ready yet, they just wait
+            ModLifecycle.OnGameReady += OnGameReady;
+            ModLifecycle.OnDayPassed += OnDayPassed;
+            ModLifecycle.OnGameExit += OnGameExit;
+
+            // OPTIONAL: Apply Harmony patches (uncomment if needed)
+            // First check if Harmony is available on this setup
+            // if (ModPatching.IsHarmonyAvailable())
+            // {
+            //     ModPatching.PatchAll("com.yourname.{MOD_NAME}");
+            // }
+
+            ModLogger.Log("Mod loaded successfully!");
+        }
+
+        // =====================================================
+        // Step 2: OnGameReady - Player is in a game, data is safe to read
+        // =====================================================
+        private void OnGameReady()
+        {
+            ModLogger.Log("Game is ready! Initializing mod logic.");
+
+            // EXAMPLE: Read the player's company name
+            // var company = ModCompanyHelper.GetPlayerCompany();
+            // if (company != null)
+            // {
+            //     ModLogger.Log("Player company: " + company.Name);
+            // }
+
+            // EXAMPLE: Create a UI window
+            // var window = ModFramework.UI.Custom.ModWindow.Create("My Window", 400, 300, singletonKey: "{MOD_NAME}_main");
+            // ModFramework.UI.Custom.ModLabel.Create("Hello from {MOD_NAME}!", window.ContentPanel);
+            // window.Show();
+        }
+
+        // =====================================================
+        // Step 3: OnDayPassed - Runs once per in-game day
+        // =====================================================
+        private void OnDayPassed()
+        {
+            // EXAMPLE: Log the player's employee count on the 1st of each month
+            // var date = ModMarketHelper.GetCurrentDate();
+            // if (date.Day == 1)
+            // {
+            //     int count = ModEmployeeHelper.GetPlayerEmployeeCount();
+            //     ModLogger.Log("Monthly report: " + count + " employees");
+            // }
+        }
+
+        // =====================================================
+        // Step 4: OnGameExit - Player left the game, clean up
+        // =====================================================
+        private void OnGameExit()
+        {
+            ModLogger.Log("Cleaning up mod state.");
+            // Close windows, clear caches, etc.
+        }
+    }
+}

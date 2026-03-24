@@ -65,7 +65,7 @@ namespace ModFramework.UI.Custom
         private static Canvas _fallbackCanvas;
 
         /// <summary>
-        /// Creates a new ModWindow. Does NOT show it yet — call Show() when ready.
+        /// Creates a new ModWindow. Does NOT show it yet - call Show() when ready.
         /// </summary>
         public static ModWindow Create(string title, float width, float height, string singletonKey = null)
         {
@@ -266,7 +266,7 @@ namespace ModFramework.UI.Custom
                 ccBg.type = Image.Type.Sliced;
             }
 
-            // Content panel — the actual area users add widgets to
+            // Content panel - the actual area users add widgets to
             ContentPanel = new GameObject("ContentPanel");
             RectTransform cpRect = ContentPanel.AddComponent<RectTransform>();
             cpRect.SetParent(contentRect, false);

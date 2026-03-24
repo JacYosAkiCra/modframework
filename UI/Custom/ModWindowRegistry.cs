@@ -83,7 +83,7 @@ namespace ModFramework.UI.Custom
             ModWindow existing;
             if (_singletons.TryGetValue(key, out existing) && existing != null && existing.Root != null)
             {
-                // Already exists — bring to front
+                // Already exists - bring to front
                 existing.Show();
                 return false;
             }

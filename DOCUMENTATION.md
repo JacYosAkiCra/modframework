@@ -1,4 +1,4 @@
-﻿# 🚀 Software Inc Modding - Project Setup Guide
+# 🚀 Software Inc Modding - Project Setup Guide
 
 ## 📁 Project Structure
 
@@ -1075,18 +1075,35 @@ foreach (uint id in trackedIds.ToList()) {
 
 ```
 ModFramework/
-|-- Core/                          (5 files - Utilities)
+|-- Core/                          (8 files - Utilities)
 |   |-- ModLogger.cs               Buffered logging with severity levels
 |   |-- ModEvents.cs               Pub/sub event bus
 |   |-- ModSettings.cs             Persistent key-value storage (Base64)
 |   |-- ModUtils.cs                General utilities
 |   |-- Notifications.cs           In-game toast notifications
+|   |-- ModLifecycle.cs            Safe game lifecycle hooks (v4)
+|   |-- ModSafety.cs               Error safety wrappers (v4)
+|   |-- ModPatching.cs             Harmony patch helpers (v4)
+|
+|-- GameData/                      (4 files - Safe Data Wrappers, v4)
+|   |-- ModCompanyHelper.cs        Company data (player, rivals, revenue)
+|   |-- ModProductHelper.cs        Product data (type, quality, bugs)
+|   |-- ModEmployeeHelper.cs       Employee and team data
+|   |-- ModMarketHelper.cs         Market state, dates, game speed
+|
+|-- Scaffolding/                   (Project generator, v4)
+|   |-- CreateMod.ps1              PowerShell script to generate new mods
+|   |-- Templates/
+|       |-- MainBehaviour.cs_template
+|       |-- Mod.csproj_template
+|       |-- ModMeta.json_template
+|       |-- meta.tyd_template
 |
 |-- UI/
 |   |-- Vanilla/
 |   |   |-- UIHelper.cs            Legacy game-prefab based UI (kept for compat)
 |   |
-|   |-- Custom/                    (32 files - Custom UI Framework)
+|   |-- Custom/                    (35 files - Custom UI Framework)
 |       |
 |       |-- [Foundation - 10 files]
 |       |   |-- GameTheme.cs       Auto-samples game colors/fonts/sizes
@@ -1157,10 +1174,388 @@ Because of this, **full-color Emojis are not supported**. While the game's code 
 
 To ensure maximum stability and localization support, standard `Text` is retained.
 
+
+
+
+## ModFramework v4 - Accessible DLL Modding
+
+v4 introduces tools that make DLL modding accessible to developers who have never touched the game's internals. You do not need to open dnSpy, read decompiled code, or understand the game's internal class hierarchy. Everything is wrapped in safe, easy-to-use helper methods.
+
+### What is new in v4?
+
+| Feature | What it solves |
+|---------|---------------|
+| **Scaffolding** | Creates a ready-to-build mod project in one command |
+| **Game Data Wrappers** | Read company, product, employee, and market data safely |
+| **Lifecycle Hooks** | Know exactly when the game is ready, when a day passes, etc. |
+| **Error Safety** | Prevents your mod from crashing the entire game |
+| **Harmony Helpers** | Apply code patches with a single line |
+
+---
+
+### Scaffolding - Create a New Mod in 30 Seconds
+
+**What is this?** A PowerShell script that generates an entire mod project for you, with all the references, build settings, and deployment automation already configured.
+
+**How to use it:**
+
+1. Open PowerShell (press Win+R, type `powershell`, press Enter)
+2. Navigate to your repository folder:
+   ```powershell
+   cd "C:\Users\YourName\Documents\Visual Studio 2022\SoftwareIncMods\SoftwareIncMods"
+   ```
+3. Run the scaffolding script:
+   ```powershell
+   .\ModFramework\Scaffolding\CreateMod.ps1 -ModName "MyAwesomeMod"
+   ```
+4. Open Visual Studio, right-click your Solution, choose "Add Existing Project", and select `MyAwesomeMod\MyAwesomeMod.csproj`
+5. Build the project (Ctrl+Shift+B). The DLL is automatically copied to your game's Mods folder.
+
+**What gets generated:**
+
+| File | Purpose |
+|------|---------|
+| `MyAwesomeModBehaviour.cs` | Your mod's main entry point, with step-by-step comments |
+| `MyAwesomeMod.csproj` | Pre-configured project file with all DLL references |
+| `ModMeta.json` | Metadata file describing your mod |
+| `meta.tyd` | Required by Software Inc for mod discovery in the mod menu |
+
+The generated `.csproj` includes a **post-build event** that automatically copies your compiled DLL and `ModMeta.json` to the game's local mods folder. You just hit Build, then launch the game.
+
+---
+
+### Game Data Wrappers - Read Game Data Without Crashing
+
+**What is this?** Four helper classes that let you safely read game simulation data (companies, products, employees, market info) without worrying about null references, missing data, or crashes.
+
+**Why do you need this?** Without these wrappers, reading the player's company looks like this:
+
+```csharp
+// WITHOUT wrappers (risky, can crash if any part is null)
+Company player = GameSettings.Instance.MyCompany;
+float cash = (float)player.Money;
+```
+
+With wrappers, the same code is completely safe:
+
+```csharp
+// WITH wrappers (safe, returns 0 if anything is wrong)
+float cash = ModCompanyHelper.GetPlayerCash();
+```
+
+#### ModCompanyHelper
+
+Provides safe access to company data.
+
+```csharp
+using ModFramework.GameData;
+
+// Get the player's company object (returns null if not in a game)
+Company myCompany = ModCompanyHelper.GetPlayerCompany();
+
+// Get the player's cash balance (returns 0 if not in a game)
+float cash = ModCompanyHelper.GetPlayerCash();
+
+// Get all active AI companies (excludes bankrupt ones)
+List<SimulatedCompany> rivals = ModCompanyHelper.GetActiveCompanies();
+
+// Find a company by name (case-insensitive)
+SimulatedCompany target = ModCompanyHelper.FindByName("Macrosoft");
+
+// Check if a company is bankrupt
+bool broke = ModCompanyHelper.IsBankrupt(someCompany);
+
+// Get companies sorted by revenue (richest first)
+List<SimulatedCompany> leaderboard = ModCompanyHelper.GetByRevenue();
+
+// Check if the player is currently in a game (not on main menu)
+bool inGame = ModCompanyHelper.IsInGame();
+```
+
+#### ModProductHelper
+
+Provides safe access to software product data.
+
+```csharp
+using ModFramework.GameData;
+
+// Get all products the player has released
+List<SoftwareProduct> myProducts = ModProductHelper.GetPlayerProducts();
+
+// Get ALL products on the market (from every company)
+List<SoftwareProduct> allProducts = ModProductHelper.GetAllProducts();
+
+// Get all products of a specific type (e.g. "Operating System")
+List<SoftwareProduct> osList = ModProductHelper.GetByType("Operating System");
+
+// Get details about a specific product
+string typeName = ModProductHelper.GetTypeName(product);      // "Operating System"
+string category = ModProductHelper.GetCategoryName(product);  // "Business"
+float quality = ModProductHelper.GetQuality(product);         // 0.0 to 1.0
+int bugs = ModProductHelper.GetBugCount(product);             // number of bugs
+string name = ModProductHelper.GetName(product);              // product name
+Company dev = ModProductHelper.GetDeveloper(product);         // who made it
+```
+
+#### ModEmployeeHelper
+
+Provides safe access to employee and team data.
+
+```csharp
+using ModFramework.GameData;
+
+// Get all employees working for the player
+List<Actor> employees = ModEmployeeHelper.GetPlayerEmployees();
+
+// Get employee count (quick shortcut)
+int headcount = ModEmployeeHelper.GetPlayerEmployeeCount();
+
+// Get all teams in the player's company
+List<Team> teams = ModEmployeeHelper.GetPlayerTeams();
+
+// Get an employee's name
+string name = ModEmployeeHelper.GetName(someActor);
+
+// Find which team an employee belongs to
+string teamName = ModEmployeeHelper.GetTeamName(someActor);
+```
+
+#### ModMarketHelper
+
+Provides safe access to market and game-state information.
+
+```csharp
+using ModFramework.GameData;
+
+// Get the current in-game date
+SDateTime today = ModMarketHelper.GetCurrentDate();
+
+// Get the current game speed (1 = normal, 2 = fast, etc.)
+int speed = ModMarketHelper.GetGameSpeed();
+
+// Check if the game is paused
+bool paused = ModMarketHelper.IsPaused();
+
+// Get all software types in the game (Operating System, Antivirus, etc.)
+List<SoftwareType> types = ModMarketHelper.GetSoftwareTypes();
+
+// Get all software categories across all types (Business, Home, etc.)
+List<SoftwareCategory> categories = ModMarketHelper.GetCategories();
+
+// Format a money value into a readable string
+string display = ModMarketHelper.FormatMoney(2500000);  // "$2.5M"
+```
+
+---
+
+### Lifecycle Hooks - Know When Things Happen
+
+**What is this?** A set of events you can subscribe to that fire at specific moments in the game. Instead of writing complex `Update()` loops that check game state every frame, you simply tell ModFramework "call my method when the game is ready" or "call my method every day."
+
+**Why do you need this?** Without lifecycle hooks, you have to manually check if the game has loaded every single frame. With hooks, the framework does this for you.
+
+```csharp
+using ModFramework.Core;
+
+// In your mod's Awake() method:
+ModLifecycle.OnGameReady += () => {
+    // This code runs ONCE when the player loads a save or starts a new game.
+    // It is safe to read any game data here.
+    ModLogger.Log("The game is loaded! Player company: " + ModCompanyHelper.GetPlayerCompany()?.Name);
+};
+
+ModLifecycle.OnGameExit += () => {
+    // This code runs when the player goes back to the main menu.
+    // Clean up your windows, caches, or state here.
+    ModLogger.Log("Player left the game.");
+};
+
+ModLifecycle.OnDayPassed += () => {
+    // This code runs once every in-game day at midnight.
+    // Great for periodic checks without burning CPU in Update().
+    var date = ModMarketHelper.GetCurrentDate();
+    if (date.Day == 1) {
+        ModLogger.Log("New month started!");
+    }
+};
+
+ModLifecycle.OnMonthPassed += () => {
+    // This code runs once at the start of each in-game month.
+    int employees = ModEmployeeHelper.GetPlayerEmployeeCount();
+    ModLogger.Log("Monthly report: " + employees + " employees on payroll.");
+};
+
+ModLifecycle.OnYearPassed += () => {
+    // This code runs once at the start of each in-game year.
+    ModLogger.Log("Happy New Year!");
+};
+```
+
+---
+
+### Error Safety - Never Crash the Game
+
+**What is this?** Utility methods that wrap your code in try/catch blocks so that if your mod encounters an error, the game keeps running normally. The error is logged to the console instead of freezing everything.
+
+#### ModSafety.Try()
+
+Wrap any risky operation. Returns `true` if it ran successfully, `false` if it crashed.
+
+```csharp
+using ModFramework.Core;
+
+// Basic usage: wrap risky code
+bool success = ModSafety.Try(() => {
+    var companies = ModCompanyHelper.GetActiveCompanies();
+    BuildLeaderboardUI(companies);
+}, "Building Leaderboard");
+
+if (!success) {
+    ModLogger.LogWarning("Leaderboard failed to load, using cached data.");
+}
+```
+
+#### ModSafety.TryGet()
+
+Same as Try, but for functions that return a value. If it crashes, returns a fallback value.
+
+```csharp
+// Get player cash safely (returns 0 if anything goes wrong)
+float cash = ModSafety.TryGet(() => ModCompanyHelper.GetPlayerCash(), 0f, "Getting Cash");
+```
+
+#### ModSafety.ThrottledErrorHandler()
+
+Wraps an action so it only logs errors **once** instead of spamming every frame. Essential for code that runs in Update() loops.
+
+```csharp
+private Action _safeUpdate;
+
+void Awake() {
+    _safeUpdate = ModSafety.ThrottledErrorHandler("MyMod Update", () => {
+        // This code runs every frame, but if it crashes,
+        // it only logs the error once and then stops trying.
+        UpdateDashboard();
+    });
+}
+
+void Update() {
+    _safeUpdate();
+}
+```
+
+#### ModSafety.Assert()
+
+Quick sanity check during development. Logs a warning if a condition is false. Does NOT throw an exception.
+
+```csharp
+var company = ModCompanyHelper.GetPlayerCompany();
+ModSafety.Assert(company != null, "Expected the player's company to exist");
+// If company is null, you'll see: "[ModFramework] ASSERT FAILED: Expected the player's company to exist"
+```
+
+---
+
+### Harmony Helpers - Patch Game Methods Safely
+
+**What is this?** Harmony is a library that lets you modify ("patch") the game's methods without changing the game's actual files. ModFramework wraps Harmony so you can apply patches with minimal boilerplate.
+
+**Before you start:** Make sure `0Harmony.dll` is referenced in your `.csproj`. If you used the scaffolding script, it is already included.
+
+#### Basic Usage (Attribute-Based Patching)
+
+The recommended approach is to use Harmony's `[HarmonyPatch]` attributes on your patch classes, then call `ModPatching.PatchAll()` to apply them all at once:
+
+```csharp
+using ModFramework.Core;
+using HarmonyLib;
+
+// In your mod's Awake():
+if (ModPatching.IsHarmonyAvailable()) {
+    ModPatching.PatchAll("com.yourname.mymod");
+} else {
+    ModLogger.LogWarning("Harmony is not available. Patches will not be applied.");
+}
+
+// Define your patches as separate classes:
+[HarmonyPatch(typeof(SomeGameClass), "SomeMethod")]
+public class MyPatch
+{
+    static void Postfix()
+    {
+        // This runs AFTER SomeGameClass.SomeMethod() finishes
+        ModLogger.Log("SomeMethod was called!");
+    }
+}
+```
+
+#### Cleanup
+
+Remove all your patches when the mod is deactivated:
+
+```csharp
+ModLifecycle.OnGameExit += () => {
+    ModPatching.UnpatchAll("com.yourname.mymod");
+};
+```
+
+---
+
+### Putting It All Together - Complete Example
+
+Here is a complete minimal mod that uses all v4 features:
+
+```csharp
+using System;
+using UnityEngine;
+using ModFramework.Core;
+using ModFramework.GameData;
+
+namespace MyFirstMod
+{
+    public class MyFirstModBehaviour : ModBehaviour
+    {
+        private void Awake()
+        {
+            ModLogger.SetPrefix("MyFirstMod");
+            ModSettings.SetPrefix("MyFirstMod");
+
+            // Subscribe to lifecycle events
+            ModLifecycle.OnGameReady += OnGameReady;
+            ModLifecycle.OnMonthPassed += OnMonthPassed;
+
+            ModLogger.Log("Mod loaded!");
+        }
+
+        private void OnGameReady()
+        {
+            // Safely read company data
+            ModSafety.Try(() => {
+                var company = ModCompanyHelper.GetPlayerCompany();
+                float cash = ModCompanyHelper.GetPlayerCash();
+                int employees = ModEmployeeHelper.GetPlayerEmployeeCount();
+
+                ModLogger.Log("Company: " + company?.Name);
+                ModLogger.Log("Cash: " + ModMarketHelper.FormatMoney(cash));
+                ModLogger.Log("Employees: " + employees);
+            }, "Initial Company Report");
+        }
+
+        private void OnMonthPassed()
+        {
+            // Monthly competitor scan
+            var rivals = ModCompanyHelper.GetActiveCompanies();
+            ModLogger.Log("Active competitors: " + rivals.Count);
+        }
+    }
+}
+```
+
 ---
 
 ## Changelog
 
+- **v4.0** (March 2026) - Accessible DLL modding: Game Data Wrappers, Lifecycle Hooks, Error Safety, Harmony Helpers, Project Scaffolding
 - **v3.0** (March 2026) - Complete Custom UI system (31 files), replaced legacy UIHelper as primary UI approach, added Resize, Hotkeys, and Node Graphs
 - **v2.0** (October 2025) - Core split into 5 files, added UIHelper
 - **v1.0** (September 2025) - Initial single-file ModFramework.cs

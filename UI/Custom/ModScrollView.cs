@@ -14,12 +14,12 @@ namespace ModFramework.UI.Custom
         /// </summary>
         /// <param name="contentHeight">Initial total content height (auto-expands with ContentSizeFitter).</param>
         /// <param name="parent">Parent to attach to.</param>
-        /// <returns>The content panel — add your widgets as children of this.</returns>
+        /// <returns>The content panel - add your widgets as children of this.</returns>
         public static GameObject Create(float contentHeight, GameObject parent)
         {
             GameTheme.Initialize();
 
-            // Scroll view container — fills parent
+            // Scroll view container - fills parent
             GameObject scrollObj = new GameObject("ModScrollView");
             RectTransform scrollRect = scrollObj.AddComponent<RectTransform>();
             scrollRect.SetParent(parent.transform, false);
@@ -44,7 +44,7 @@ namespace ModFramework.UI.Custom
             viewport.AddComponent<Image>().color = Color.white;
             viewport.AddComponent<Mask>().showMaskGraphic = false;
 
-            // Content panel — where widgets get added
+            // Content panel - where widgets get added
             GameObject content = new GameObject("Content");
             RectTransform contentRect = content.AddComponent<RectTransform>();
             contentRect.SetParent(vpRect, false);

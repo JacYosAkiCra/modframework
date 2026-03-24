@@ -55,7 +55,7 @@ namespace ModFramework.UI.Custom
                 Text headerText = ModHeader.Create(col.HeaderName, headerRow);
                 headerText.alignment = TextAnchor.MiddleLeft;
                 
-                // ModHeader.Create already adds a LayoutElement — use it, don't add a duplicate!
+                // ModHeader.Create already adds a LayoutElement - use it, don't add a duplicate!
                 LayoutElement le = headerText.gameObject.GetComponent<LayoutElement>();
                 if (col.Width > 0)
                 {
@@ -136,7 +136,7 @@ namespace ModFramework.UI.Custom
                 itemsPerPage
             );
 
-            // Strip the ListView's internal padding — table.Root already provides padding,
+            // Strip the ListView's internal padding - table.Root already provides padding,
             // so the extra WindowPadding from ListView's ModPanel would misalign data vs headers.
             VerticalLayoutGroup listVlg = table.ListView.Root.GetComponent<VerticalLayoutGroup>();
             if (listVlg != null)

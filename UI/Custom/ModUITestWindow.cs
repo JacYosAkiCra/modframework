@@ -45,12 +45,12 @@ namespace ModFramework.UI.Custom
             ModButton.Create("Log Samples", () =>
             {
                 ModLogger.Log("This is an info message from the test window.");
-                ModLogger.LogWarning("This is a warning — something might be off.");
-                ModLogger.LogError("This is an error — something went wrong!");
-                ModLogger.LogSuccess("This is a success — operation completed.");
+                ModLogger.LogWarning("This is a warning - something might be off.");
+                ModLogger.LogError("This is an error - something went wrong!");
+                ModLogger.LogSuccess("This is a success - operation completed.");
                 ModLogger.Log("Framework version: ModFramework v2.0");
                 ModLogger.LogWarning("Performance: 47 widgets active in 3 windows.");
-                Notifications.Show("6 log entries added — press F11 to view!");
+                Notifications.Show("6 log entries added - press F11 to view!");
             }, logRow, 140f);
             ModButton.Create("Open Console", () => ModConsoleWindow.Show(), logRow, 140f);
 

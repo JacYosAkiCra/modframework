@@ -82,7 +82,7 @@ namespace ModFramework.UI.Custom
             Image bg = viewport.AddComponent<Image>();
             bg.color = new Color(0.15f, 0.15f, 0.15f, 0.15f);
 
-            // Content container — top-left anchored so (0,0) = top-left
+            // Content container - top-left anchored so (0,0) = top-left
             // Y goes negative downward matching anchoredPosition convention
             GameObject content = new GameObject("GraphContent");
             graph._contentRect = content.AddComponent<RectTransform>();
@@ -95,7 +95,7 @@ namespace ModFramework.UI.Custom
             scroll.viewport = viewRect;
             scroll.content  = graph._contentRect;
 
-            // Edge Layer — SAME pivot/anchor as content so local coords match node positions
+            // Edge Layer - SAME pivot/anchor as content so local coords match node positions
             graph._edgeLayer = new GameObject("EdgeLayer");
             RectTransform edgeRect = graph._edgeLayer.AddComponent<RectTransform>();
             edgeRect.SetParent(graph._contentRect, false);
@@ -104,7 +104,7 @@ namespace ModFramework.UI.Custom
             edgeRect.pivot     = new Vector2(0f, 1f);
             edgeRect.sizeDelta = new Vector2(1000f, 1000f);
 
-            // Node Layer — same setup
+            // Node Layer - same setup
             graph._nodeLayer = new GameObject("NodeLayer");
             RectTransform nodeRect = graph._nodeLayer.AddComponent<RectTransform>();
             nodeRect.SetParent(graph._contentRect, false);
@@ -140,7 +140,7 @@ namespace ModFramework.UI.Custom
         {
             if (_nodes.Count == 0) return;
 
-            // 1. Find root nodes — nodes with no incoming edges
+            // 1. Find root nodes - nodes with no incoming edges
             HashSet<string> hasIncoming = new HashSet<string>();
             foreach (var edge in _edges) hasIncoming.Add(edge.ToId);
 
@@ -172,7 +172,7 @@ namespace ModFramework.UI.Custom
                 visited.Add(_nodes[0].Id);
             }
 
-            // BFS — assign depths
+            // BFS - assign depths
             while (queue.Count > 0)
             {
                 var current = queue.Dequeue();
@@ -190,7 +190,7 @@ namespace ModFramework.UI.Custom
                 }
             }
 
-            // Anything still at -1 is disconnected — put it at depth 0
+            // Anything still at -1 is disconnected - put it at depth 0
             foreach (var node in _nodes)
                 if (node.Depth < 0) node.Depth = 0;
 
@@ -227,7 +227,7 @@ namespace ModFramework.UI.Custom
             var nodeRt = _nodeLayer.GetComponent<RectTransform>();
             nodeRt.sizeDelta = new Vector2(totalWidth, totalHeight);
 
-            // 4. Position nodes — center the tree inside the large canvas
+            // 4. Position nodes - center the tree inside the large canvas
             float startYOffset = -(totalHeight - treeHeight) * 0.5f;
 
             foreach (var kvp in layers)

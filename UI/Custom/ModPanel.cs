@@ -14,7 +14,7 @@ namespace ModFramework.UI.Custom
         /// </summary>
         /// <param name="parent">Parent GameObject to attach to.</param>
         /// <param name="withBackground">If true, panel gets a subtle background tint for visual grouping.</param>
-        /// <returns>The panel GameObject — add widgets as children of this.</returns>
+        /// <returns>The panel GameObject - add widgets as children of this.</returns>
         public static GameObject Create(GameObject parent, bool withBackground = false)
         {
             GameTheme.Initialize();

@@ -56,7 +56,7 @@ namespace ModFramework.UI.Custom
             rootLe.preferredHeight = height + 30f;
             rootLe.flexibleWidth = 1f;
 
-            // Chart drawing area — dark background like game's finance chart
+            // Chart drawing area - dark background like game's finance chart
             chart._chartArea = new GameObject("ChartArea");
             RectTransform areaRect = chart._chartArea.AddComponent<RectTransform>();
             areaRect.SetParent(chart.Root.transform, false);

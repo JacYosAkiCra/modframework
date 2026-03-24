@@ -2,23 +2,36 @@
 
 ![Software Inc](https://img.shields.io/badge/Game-Software_Inc-blue?style=for-the-badge&logo=steam) ![Unity 2019.4](https://img.shields.io/badge/Unity-2019.4-black?style=for-the-badge&logo=unity) ![License](https://img.shields.io/badge/License-MIT-success?style=for-the-badge)
 
-A complete UI and utility framework for building Software Inc mods.
+A complete UI, utility, and gameplay framework for building Software Inc mods.
 
 ### What is this and why use it?
-Modding the user interface in Software Inc can be difficult for beginners. The base game uses complex native prefabs and `WindowManager` calls that are hard to modify or extend. 
-The **ModFramework** solves this by providing 31 custom UI components (buttons, labels, windows, charts, lists, etc.) built entirely from code that **automatically theme themselves to look exactly like the base game.** 
+Modding Software Inc can be difficult for beginners. The base game uses complex native prefabs and internal APIs that are hard to work with directly.
 
-You get the native Software Inc look and feel, but with the ease of a modern C# framework. You don't need to load any prefabs, and you don't need to do any complex math to position things-everything uses Unity's automatic layout groups!
+**ModFramework** solves this by providing:
+- **31 custom UI components** (buttons, labels, windows, charts, lists, etc.) that automatically theme themselves to look exactly like the base game
+- **Game Data Wrappers** for safely reading company, product, employee, and market data
+- **Lifecycle Hooks** so you know exactly when the game is ready, when a day passes, and when the player exits
+- **Error Safety** tools that prevent your mod from crashing the game
+- **Harmony Helpers** for patching game methods with a single line of code
+- **Project Scaffolding** to create a new mod project in 30 seconds
 
-**Namespace:** `ModFramework.UI.Custom` (UI) / `ModFramework.Core` (utilities)
-**Requires:** Unity 2019.4 (game's engine), .NET Framework 4.x
+**Namespace:** `ModFramework.UI.Custom` (UI) / `ModFramework.Core` (utilities) / `ModFramework.GameData` (data wrappers)
+**Requires:** Unity 2019.4 (game's engine), .NET Framework 4.8
 **License:** MIT - Free to use in any Software Inc mod
 
 ---
 
+## Quick Start - Create a New Mod (v4)
 
+The fastest way to start is with the scaffolding script:
 
-## Quick Start
+```powershell
+.\ModFramework\Scaffolding\CreateMod.ps1 -ModName "MyAwesomeMod"
+```
+
+This generates a complete, ready-to-build mod project with all references configured and a post-build event that automatically copies your DLL to the game's mod folder.
+
+## Quick Start - UI Example
 
 Create a themed window with widgets in just a few lines:
 
@@ -36,19 +49,30 @@ ModToggle.Create("Enable Feature", true, val => {
     ModSettings.SetBool("feature_enabled", val);
 }, window.ContentPanel);
 
-ModSlider.Create(0.5f, 2.0f, 1.0f, val => {
-    ModSettings.SetFloat("multiplier", val);
-}, window.ContentPanel);
-
 ModButton.Create("Apply", () => {
     Notifications.ShowSuccess("Settings saved!");
 }, window.ContentPanel);
 
-// Show the window
 window.Show();
 ```
 
-That's it. No manual `Rect` positioning, no hardcoded colors, no game prefab dependencies.
+No manual `Rect` positioning, no hardcoded colors, no game prefab dependencies.
+
+## Quick Start - Game Data Example (v4)
+
+Read game data safely without any null-reference worries:
+
+```csharp
+using ModFramework.GameData;
+using ModFramework.Core;
+
+// These will never crash your mod, even if the game isn't fully loaded yet
+float cash = ModCompanyHelper.GetPlayerCash();
+int employees = ModEmployeeHelper.GetPlayerEmployeeCount();
+string money = ModMarketHelper.FormatMoney(cash);  // "$2.5M"
+
+ModLogger.Log("Cash: " + money + ", Employees: " + employees);
+```
 
 ---
 
@@ -83,4 +107,4 @@ The Custom UI system uses namespaces and multi-file architecture which CS script
 Copy `ModFramework.cs` into your mod folder and deploy it as a `.cs` file to `DLLMods/YourMod/`.
 
 ## Documentation
-For the complete setup guide and full API reference, please see the [Documentation](DOCUMENTATION.md).
+For the complete setup guide, full API reference, v4 Game Data Wrappers, Lifecycle Hooks, and UI cookbook, please see the [Documentation](DOCUMENTATION.md).

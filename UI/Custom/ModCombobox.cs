@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Themed dropdown (combobox) — built from scratch, no game prefab dependency.
+/// Themed dropdown (combobox) - built from scratch, no game prefab dependency.
 /// Dropdown panel renders above the combobox using Canvas override for z-order.
 /// </summary>
 namespace ModFramework.UI.Custom

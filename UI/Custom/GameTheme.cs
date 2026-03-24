@@ -48,7 +48,7 @@ namespace ModFramework.UI.Custom
         /// <summary>
         /// Call once (e.g., from mod Init or first window open).
         /// Spawns temporary prefabs, reads their styles, then destroys them.
-        /// Safe to call multiple times — subsequent calls are no-ops.
+        /// Safe to call multiple times - subsequent calls are no-ops.
         /// </summary>
         public static void Initialize()
         {
@@ -76,7 +76,7 @@ namespace ModFramework.UI.Custom
             // --- Sample from live game prefabs ---
             TrySampleFromPrefabs();
 
-            Debug.Log("[ModFramework] GameTheme initialized — " +
+            Debug.Log("[ModFramework] GameTheme initialized - " +
                       "Font: " + (GameFont != null ? GameFont.name : "null") +
                       ", FontSize: " + DefaultFontSize +
                       ", WindowBG: " + WindowBackground);

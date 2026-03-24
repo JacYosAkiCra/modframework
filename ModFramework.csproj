@@ -61,6 +61,10 @@
       <HintPath>E:\SteamLibrary\steamapps\common\Software Inc\Software Inc_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>..\packages\Lib.Harmony.2.4.1\lib\net472\0Harmony.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ModFramework.cs" />
@@ -105,6 +109,13 @@
     <Compile Include="UI\Custom\ModHotkeyRegistry.cs" />
     <Compile Include="UI\Custom\ModHotkeyPoller.cs" />
     <Compile Include="UI\Custom\ModNodeGraph.cs" />
+    <Compile Include="GameData\ModCompanyHelper.cs" />
+    <Compile Include="GameData\ModProductHelper.cs" />
+    <Compile Include="GameData\ModEmployeeHelper.cs" />
+    <Compile Include="GameData\ModMarketHelper.cs" />
+    <Compile Include="Core\ModLifecycle.cs" />
+    <Compile Include="Core\ModSafety.cs" />
+    <Compile Include="Core\ModPatching.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

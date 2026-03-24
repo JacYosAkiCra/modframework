@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 /// <summary>
 /// Tracks which ModWindow has focus (was last clicked).
-/// Attach to the window root — clicking anywhere on it brings it to front.
+/// Attach to the window root - clicking anywhere on it brings it to front.
 /// </summary>
 namespace ModFramework.UI.Custom
 {
