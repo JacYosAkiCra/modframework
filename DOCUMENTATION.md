@@ -1,196 +1,88 @@
-# 🚀 Software Inc Modding - Project Setup Guide
+# ModFramework Documentation
 
 ## 📁 Project Structure
 
 ```
-SoftwareIncMods.sln
-├── ModFramework/              ← Shared library for all mods
-│   ├── ModFramework.cs       ← UIHelper, ModLogger, Notifications, etc.
-│   ├── ModFramework.csproj
-│   └── README.md
-│
-├── CompatibilityChecker/      ← Your first mod
-│   ├── CompatibilityChecker.cs
-│   ├── CompatibilityCheckerBehaviour.cs
-│   ├── ModDiagnosticsUI.cs
-│   └── CompatibilityChecker.csproj
-│
-└── YourNewMod/               ← Future mods go here
-    ├── YourNewModMeta.cs
-    ├── YourNewModBehaviour.cs
-    └── YourNewMod.csproj
+ModFramework/
+|-- ModFramework.cs                 Module index / version header
+|-- ModFramework.csproj             Project file
+|-- README.md                       High-level overview
+|-- DOCUMENTATION.md                This file - full API reference
+|-- LICENSE                         MIT License
+|
+|-- Core/                           (8 files - Utilities & Infrastructure)
+|   |-- ModLogger.cs                Buffered logging with severity levels
+|   |-- ModEvents.cs                Pub/sub event bus
+|   |-- ModSettings.cs              Persistent key-value storage (Base64)
+|   |-- ModUtils.cs                 General utilities
+|   |-- Notifications.cs            In-game toast notifications
+|   |-- ModLifecycle.cs             Mod activation/deactivation lifecycle hooks
+|   |-- ModPatching.cs              Runtime method patching helpers
+|   |-- ModSafety.cs                Error handling and safety wrappers
+|
+|-- GameData/                       (4 files - Game Data Helpers)
+|   |-- ModCompanyHelper.cs         Company data access and utilities
+|   |-- ModEmployeeHelper.cs        Employee data access and utilities
+|   |-- ModMarketHelper.cs          Market/industry data access and utilities
+|   |-- ModProductHelper.cs         Product data access and utilities
+|
+|-- UI/
+|   |-- Vanilla/
+|   |   |-- UIHelper.cs             Legacy game-prefab based UI (kept for compat)
+|   |
+|   |-- Custom/                     (35 files - Custom UI Framework)
+|       |
+|       |-- [Foundation]
+|       |   |-- GameTheme.cs        Auto-samples game colors/fonts/sizes
+|       |   |-- ModWindow.cs        Draggable, collapsible, pinnable window
+|       |   |-- ModWindowRegistry.cs   Singleton tracking, z-order, focus
+|       |   |-- ModRefreshDriver.cs    Live refresh MonoBehaviour (ticks callbacks)
+|       |   |-- DragHandler.cs      Drag-to-move MonoBehaviour
+|       |   |-- HoverHandler.cs     Hover color shift MonoBehaviour
+|       |   |-- FocusTracker.cs     Click-to-focus MonoBehaviour
+|       |   |-- ResizeHandler.cs    Bottom right drag-to-resize grip
+|       |   |-- ModHotkeyRegistry.cs   Centralized keybind manager
+|       |   |-- ModHotkeyPoller.cs     Input polling loop
+|       |
+|       |-- [Widgets]
+|       |   |-- ModButton.cs        Themed button with hover/press
+|       |   |-- ModLabel.cs         Text label + ModHeader (bold section header)
+|       |   |-- ModInputField.cs    Single-line input + ModTextArea + ModSearchField + ModNumericInput
+|       |   |-- ModToggle.cs        Checkbox + ModSlider
+|       |   |-- ModScrollView.cs    Scrollable container
+|       |   |-- ModCombobox.cs      Dropdown selector
+|       |   |-- ModProgressBar.cs   Visual progress indicator
+|       |   |-- ModPanel.cs         Vertical/horizontal layout container
+|       |   |-- ModKeybind.cs       Press-any-key hotkey binder
+|       |
+|       |-- [Data Views]
+|       |   |-- ModListView.cs      Generic pooled list with search + pagination
+|       |   |-- ModTable.cs         Column-based table built on ModListView
+|       |   |-- ModHUD.cs           Screen-edge overlay
+|       |   |-- ModDialog.cs        Modal message/confirm dialogs
+|       |   |-- ModTooltip.cs       Mouse-follow tooltip
+|       |   |-- ModConsoleWindow.cs Debug log viewer
+|       |
+|       |-- [Advanced]
+|           |-- ModBarChart.cs      Horizontal bar chart
+|           |-- ModPieChart.cs      Radial fill pie chart with labels
+|           |-- ModLineChart.cs     Mesh-based smooth line chart (MaskableGraphic)
+|           |-- ModAccordion.cs     Collapsible sections
+|           |-- ModContextMenu.cs   Right-click context menu
+|           |-- ModSplitPane.cs     Side-by-side split panels
+|           |-- ModCardLayout.cs    Grid card layout
+|           |-- ModNotificationBadge.cs  Counter badge (attaches to any element)
+|           |-- ModNodeGraph.cs     Visual node graph and tech tree (MaskableGraphic edges)
+|           |-- ModUITestWindow.cs  Built-in test/demo window
+|
+|-- Scaffolding/                    (Mod Generator)
+|   |-- CreateMod.ps1               PowerShell script to scaffold a new mod project
+|   |-- Templates/
+|       |-- MainBehaviour.cs_template
+|       |-- Mod.csproj_template
+|       |-- ModMeta.json_template
+|       |-- meta.tyd_template
 ```
-
-## ✅ What Was Set Up
-
-### 1. **ModFramework Project**
-- Centralized framework with reusable components
-- All mods copy `ModFramework.cs` during build
-- Located at: `ModFramework/ModFramework.cs`
-
-### 2. **Updated CompatibilityChecker.csproj**
-- Now references ModFramework
-- Post-build event copies all `.cs` files to game folder
-- Automatically deploys on each build
-
-### 3. **Build Process**
-When you build in Visual Studio:
-1. All mod `.cs` files are copied to `E:\SteamLibrary\steamapps\common\Software Inc\DLLMods\YourModName\`
-2. `ModFramework.cs` is copied to each mod folder
-3. Software Inc compiles them at runtime
-
-## 🎮 How to Create a New Mod
-
-### Step 1: Create New Project
-1. Right-click solution → Add → New Project
-2. Choose "Class Library (.NET Framework 4.8)"
-3. Name it (e.g., "MyAwesomeMod")
-
-### Step 2: Configure Project
-Copy these settings to your new `.csproj`:
-
-```xml
-<!-- Add references to Unity/Software Inc DLLs -->
-<ItemGroup>
-  <Reference Include="Assembly-CSharp">
-    <HintPath>E:\SteamLibrary\steamapps\common\Software Inc\Software Inc_Data\Managed\Assembly-CSharp.dll</HintPath>
-    <Private>False</Private>
-  </Reference>
-  <Reference Include="UnityEngine.CoreModule">
-    <HintPath>E:\SteamLibrary\steamapps\common\Software Inc\Software Inc_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-    <Private>False</Private>
-  </Reference>
-  <Reference Include="UnityEngine.UI">
-    <HintPath>E:\SteamLibrary\steamapps\common\Software Inc\Software Inc_Data\Managed\UnityEngine.UI.dll</HintPath>
-    <Private>False</Private>
-  </Reference>
-</ItemGroup>
-
-<!-- Link ModFramework -->
-<ItemGroup>
-  <Content Include="..\ModFramework\ModFramework.cs">
-    <Link>ModFramework.cs</Link>
-    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </Content>
-</ItemGroup>
-
-<!-- Post-build: Copy to game folder -->
-<PropertyGroup>
-  <PostBuildEvent>
-if not exist "E:\SteamLibrary\steamapps\common\Software Inc\DLLMods\MyAwesomeMod\" mkdir "E:\SteamLibrary\steamapps\common\Software Inc\DLLMods\MyAwesomeMod\"
-xcopy /Y /R "$(ProjectDir)*.cs" "E:\SteamLibrary\steamapps\common\Software Inc\DLLMods\MyAwesomeMod\"
-xcopy /Y /R "$(ProjectDir)..\ModFramework\ModFramework.cs" "E:\SteamLibrary\steamapps\common\Software Inc\DLLMods\MyAwesomeMod\"
-  </PostBuildEvent>
-</PropertyGroup>
-```
-
-### Step 3: Create Mod Files
-
-**MyAwesomeModMeta.cs:**
-```csharp
-using UnityEngine;
-using UnityEngine.UI;
-
-namespace MyAwesomeMod
-{
-    public class MyAwesomeModMeta : ModMeta
-    {
-        public override string Name
-        {
-            get { return "My Awesome Mod"; }
-        }
-
-        public override void ConstructOptionsScreen(RectTransform parent, bool inGame)
-        {
-            Text label = WindowManager.SpawnLabel();
-            label.text = "My Awesome Mod v1.0";
-            label.color = Color.black;
-            WindowManager.AddElementToElement(label.gameObject, parent.gameObject, 
-                new Rect(0, 0, 400, 120), new Rect(0.01f, 0.01f, 0, 0));
-        }
-    }
-}
-```
-
-**MyAwesomeModBehaviour.cs:**
-```csharp
-using UnityEngine;
-using ModFramework;
-
-namespace MyAwesomeMod
-{
-    public class MyAwesomeModBehaviour : ModBehaviour
-    {
-        private void Awake()
-        {
-            ModLogger.SetPrefix("MyAwesomeMod");
-            ModSettings.SetPrefix("MyAwesomeMod");
-        }
-
-        public override void OnActivate()
-        {
-            ModLogger.LogSuccess("MY AWESOME MOD ACTIVATED!");
-            Notifications.ShowSuccess("MyAwesomeMod is running!");
-        }
-
-        public override void OnDeactivate()
-        {
-            ModLogger.Log("Mod deactivated");
-        }
-    }
-}
-```
-
-### Step 4: Create meta.tyd
-In `E:\SteamLibrary\steamapps\common\Software Inc\DLLMods\MyAwesomeMod\meta.tyd`:
-
-```tyd
-Name        MyAwesomeMod
-Description "Does awesome things!"
-Author      YourName
-SteamName   MyAwesomeMod
-```
-
-### Step 5: Build and Test
-1. Build in Visual Studio (Ctrl+Shift+B)
-2. Launch Software Inc
-3. Enable your mod in the mod menu
-4. Test it!
-
-## 📚 Using ModFramework
-
-Add to any mod file:
-```csharp
-using ModFramework;
-```
-
-Available components:
-- **UIHelper** - Create windows, buttons, labels, etc.
-- **ModLogger** - Color-coded logging system
-- **Notifications** - In-game popup messages
-- **ModSettings** - Save/load player preferences
-- **ModUtils** - String formatting, number formatting, etc.
-
-See the main `README.md` for complete API documentation.
-
-## 🔧 Troubleshooting
-
-1. **Mod not showing?** Check `Player.log` for compilation errors
-2. **Changes not applying?** Reload mods in-game (Code mods menu)
-3. **Errors?** Make sure all `.cs` files are in the DLLMods folder
-4. **Framework issues?** Verify `ModFramework.cs` is copied to your mod folder
-
-## 🎯 Next Steps
-
-Your setup is complete! You can now:
-1. Test the CompatibilityChecker mod (already working)
-2. Create your next mod using the guide above
-3. Leverage ModFramework to save development time
-
-Happy modding! 🚀
-
-
----
 
 ---
 
