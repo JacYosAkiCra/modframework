@@ -29,7 +29,7 @@ namespace ModFramework
 
         public static void ShowSuccess(string message)
         {
-            Show(message, "Cogs", 2f);
+            Show(message, "Check", 2f);
         }
 
         public static void ShowWarning(string message)

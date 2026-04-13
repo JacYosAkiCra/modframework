@@ -7,13 +7,15 @@ using UnityEngine.EventSystems;
 /// </summary>
 namespace ModFramework.UI.Custom
 {
-    public class ResizeHandler : MonoBehaviour, IBeginDragHandler, IDragHandler
+    public class ResizeHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         private RectTransform _windowRect;
         private Vector2 _minSize = new Vector2(200f, 150f);
         private Vector2 _maxSize = new Vector2(1600f, 1000f);
         private Vector2 _startSize;
         private Vector2 _startMousePos;
+        
+        private GameObject _contentArea;
 
         /// <summary>
         /// Set the target window RectTransform and optional constraints.
@@ -34,6 +36,12 @@ namespace ModFramework.UI.Custom
             
             RectTransform parentRect = _windowRect.parent as RectTransform;
             if (parentRect == null) return;
+
+            // PERFORMANCE FIX: Hide the content area during resize.
+            // Adjusting sizeDelta triggers the exact same LayoutGroup diryt-cascade
+            // as anchoredPosition. Hiding content prevents 300+ cells from recalculating every frame.
+            _contentArea = FindContentArea();
+            if (_contentArea != null) _contentArea.SetActive(false);
 
             // Convert mouse position to local space of the window's parent
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -67,6 +75,20 @@ namespace ModFramework.UI.Custom
                 
                 _windowRect.sizeDelta = new Vector2(newWidth, newHeight);
             }
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            // Restore content area
+            if (_contentArea != null) _contentArea.SetActive(true);
+            _contentArea = null;
+        }
+
+        private GameObject FindContentArea()
+        {
+            if (_windowRect == null) return null;
+            Transform content = _windowRect.Find("Content");
+            return content != null ? content.gameObject : null;
         }
     }
 }

@@ -72,6 +72,17 @@ namespace ModFramework.UI.Custom
         }
 
         /// <summary>
+        /// Temporarily enable or disable a specific hotkey (e.g., during keybind capture).
+        /// </summary>
+        public static void SetEnabled(string id, bool enabled)
+        {
+            if (_entries.TryGetValue(id, out HotkeyEntry entry))
+            {
+                entry.Enabled = enabled;
+            }
+        }
+
+        /// <summary>
         /// Get the currently bound key for an ID. Returns KeyCode.None if not found.
         /// </summary>
         public static KeyCode GetKey(string id)

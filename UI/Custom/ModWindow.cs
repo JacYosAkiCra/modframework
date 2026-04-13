@@ -226,6 +226,7 @@ namespace ModFramework.UI.Custom
             Root = new GameObject("ModWindow_" + Title);
             _rootRect = Root.AddComponent<RectTransform>();
             _rootRect.SetParent(GetCanvasTransform(), false);
+
             _rootRect.sizeDelta = new Vector2(_windowWidth, _windowHeight);
             _rootRect.anchoredPosition = Vector2.zero;
             _rootRect.pivot = new Vector2(0.5f, 1f); // Pivot at Top to collapse UP

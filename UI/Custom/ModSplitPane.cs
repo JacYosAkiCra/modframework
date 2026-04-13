@@ -59,9 +59,7 @@ namespace ModFramework.UI.Custom
 
             LayoutElement leftLe = pane.LeftPanel.AddComponent<LayoutElement>();
             leftLe.flexibleWidth = pane._splitRatio;
-
-            ContentSizeFitter leftCsf = pane.LeftPanel.AddComponent<ContentSizeFitter>();
-            leftCsf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            leftLe.flexibleHeight = 1f;
 
             // Divider (draggable)
             pane._divider = new GameObject("Divider");
@@ -97,9 +95,7 @@ namespace ModFramework.UI.Custom
 
             LayoutElement rightLe = pane.RightPanel.AddComponent<LayoutElement>();
             rightLe.flexibleWidth = 1f - pane._splitRatio;
-
-            ContentSizeFitter rightCsf = pane.RightPanel.AddComponent<ContentSizeFitter>();
-            rightCsf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            rightLe.flexibleHeight = 1f;
 
             return pane;
         }

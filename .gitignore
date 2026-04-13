@@ -13,3 +13,6 @@
 *.dll
 *.pdb
 *.cache
+
+# Bundled dependencies (tracked)
+!Harmony/0Harmony.dll

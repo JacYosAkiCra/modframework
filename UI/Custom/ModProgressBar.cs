@@ -155,6 +155,7 @@ namespace ModFramework.UI.Custom
 
                 LayoutElement tabBtnLE = tabBtnObj.AddComponent<LayoutElement>();
                 tabBtnLE.preferredWidth = 100f;
+                tabBtnLE.preferredHeight = GameTheme.ButtonHeight;
 
                 Button tabBtn = tabBtnObj.AddComponent<Button>();
 

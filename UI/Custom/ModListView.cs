@@ -22,6 +22,7 @@ namespace ModFramework.UI.Custom
         private Action<GameObject> _onCreateRow;
         private Action<T, GameObject> _onBindRow;
         private Func<T, string, bool> _onFilter;
+        private Comparison<T> _sortComparer;
         
         private GameObject _contentContainer;
         private InputField _searchField;
@@ -70,7 +71,21 @@ namespace ModFramework.UI.Custom
 
         public void SetData(IEnumerable<T> items)
         {
-            _allItems = items != null ? items.ToList() : new List<T>();
+            if (_allItems == null) _allItems = new List<T>();
+            _allItems.Clear();
+            if (items != null) _allItems.AddRange(items);
+
+            _isDirty = true;
+            Refresh();
+        }
+
+        /// <summary>
+        /// Set the sort order for the list. Pass null to clear sorting.
+        /// Automatically refreshes the list in-place.
+        /// </summary>
+        public void SetSort(Comparison<T> comparer)
+        {
+            _sortComparer = comparer;
             _isDirty = true;
             Refresh();
         }
@@ -85,13 +100,22 @@ namespace ModFramework.UI.Custom
             }
 
             // Apply filter
-            if (_onFilter != null && !string.IsNullOrEmpty(_currentSearch))
+            if (_filteredItems == null) _filteredItems = new List<T>(_allItems.Count);
+            _filteredItems.Clear();
+
+            bool hasFilter = _onFilter != null && !string.IsNullOrEmpty(_currentSearch);
+            for (int i = 0; i < _allItems.Count; i++)
             {
-                _filteredItems = _allItems.Where(item => _onFilter(item, _currentSearch)).ToList();
+                if (!hasFilter || _onFilter(_allItems[i], _currentSearch))
+                {
+                    _filteredItems.Add(_allItems[i]);
+                }
             }
-            else
+
+            // Apply Sort
+            if (_sortComparer != null)
             {
-                _filteredItems = _allItems.ToList();
+                _filteredItems.Sort(_sortComparer);
             }
 
             // Enforce bounds
@@ -134,9 +158,9 @@ namespace ModFramework.UI.Custom
                 _prevBtn.interactable = _currentPage > 0;
                 _nextBtn.interactable = _currentPage < totalPages - 1;
             }
-            
-            // Rebuild layout to clean up spacing
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_contentContainer.GetComponent<RectTransform>());
+
+            // Layout is updated automatically by Unity's layout system
+            // after SetActive changes - no need for expensive ForceRebuildLayoutImmediate
         }
 
         private void EnsurePoolSize(int size)

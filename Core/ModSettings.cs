@@ -10,15 +10,94 @@ using UnityEngine;
 ///
 /// 2026-03: Software Inc security update blocks mods that reference UnityEngine's built-in prefs API.
 /// This implementation persists settings to disk under Application.persistentDataPath instead.
+///
+/// IMPORTANT: The static methods on this class use a global prefix that is shared across all mods.
+/// When multiple DLL mods are loaded, they can stomp on each other's prefix.
+/// For Harmony patches and any code that runs outside of ConstructOptionsScreen,
+/// use the scoped API instead:
+///
+///   private static readonly ModSettingsScope Settings = ModSettings.ForMod("MyMod");
+///   float val = Settings.GetFloat("MyKey", 1.0f);
+///
+/// The scoped API is always safe to use regardless of which mod set the global prefix last.
 /// </summary>
 namespace ModFramework
 {
+    // ========== SCOPED SETTINGS (RECOMMENDED) ==========
+
+    /// <summary>
+    /// Mod-scoped settings accessor. Each instance carries its own prefix,
+    /// so it is safe to use in Harmony patches when multiple mods are loaded.
+    ///
+    /// Create one via ModSettings.ForMod("MyModName") and store it as a static field.
+    /// </summary>
+    public sealed class ModSettingsScope
+    {
+        private readonly string _prefix;
+
+        internal ModSettingsScope(string prefix)
+        {
+            _prefix = string.IsNullOrWhiteSpace(prefix) ? "Mod" : prefix.Trim();
+        }
+
+        public void SetBool(string key, bool value) { ModSettings.ScopedSetString(_prefix, key, value ? "1" : "0"); }
+        public bool GetBool(string key, bool defaultValue = false)
+        {
+            var s = ModSettings.ScopedGetString(_prefix, key, null);
+            if (string.IsNullOrEmpty(s)) return defaultValue;
+            if (s == "1") return true;
+            if (s == "0") return false;
+            bool b;
+            return bool.TryParse(s, out b) ? b : defaultValue;
+        }
+
+        public void SetInt(string key, int value) { ModSettings.ScopedSetString(_prefix, key, value.ToString(CultureInfo.InvariantCulture)); }
+        public int GetInt(string key, int defaultValue = 0)
+        {
+            var s = ModSettings.ScopedGetString(_prefix, key, null);
+            int v;
+            return (s != null && int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out v)) ? v : defaultValue;
+        }
+
+        public void SetFloat(string key, float value) { ModSettings.ScopedSetString(_prefix, key, value.ToString(CultureInfo.InvariantCulture)); }
+        public float GetFloat(string key, float defaultValue = 0f)
+        {
+            var s = ModSettings.ScopedGetString(_prefix, key, null);
+            float v;
+            return (s != null && float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out v)) ? v : defaultValue;
+        }
+
+        public void SetString(string key, string value) { ModSettings.ScopedSetString(_prefix, key, value); }
+        public string GetString(string key, string defaultValue = "")
+        {
+            return ModSettings.ScopedGetString(_prefix, key, defaultValue);
+        }
+    }
+
+    // ========== STATIC SETTINGS (BACKWARD COMPAT) ==========
+
     public static class ModSettings
     {
         private static readonly object _gate = new object();
         private static string _prefix = "Mod";
         private static Dictionary<string, string> _values;
         private static bool _loaded;
+
+        /// <summary>
+        /// Creates a mod-scoped settings accessor that does NOT depend on the global prefix.
+        /// This is the recommended way to read/write settings from Harmony patches and
+        /// any code that may run while multiple mods are loaded.
+        ///
+        /// Usage:
+        ///   private static readonly ModSettingsScope Settings = ModSettings.ForMod("MyMod");
+        ///   float val = Settings.GetFloat("MyKey", 1.0f);
+        /// </summary>
+        public static ModSettingsScope ForMod(string modName)
+        {
+            return new ModSettingsScope(modName);
+        }
+
+        // --- Global prefix (legacy) ---
 
         public static void SetPrefix(string modName)
         {
@@ -92,6 +171,61 @@ namespace ModFramework
                 TryDeleteFile();
             }
         }
+
+        // --- Internal scoped methods (used by ModSettingsScope) ---
+
+        internal static void ScopedSetString(string prefix, string key, string value)
+        {
+            if (string.IsNullOrEmpty(key)) return;
+            lock (_gate)
+            {
+                // Temporarily swap prefix to load the correct file,
+                // then use the scoped key directly
+                string savedPrefix = _prefix;
+                if (_prefix != prefix)
+                {
+                    _prefix = prefix;
+                    _loaded = false;
+                    _values = null;
+                }
+                EnsureLoaded();
+                _values[prefix + "_" + key] = value ?? "";
+                Persist();
+                if (_prefix != savedPrefix)
+                {
+                    _prefix = savedPrefix;
+                    _loaded = false;
+                    _values = null;
+                }
+            }
+        }
+
+        internal static string ScopedGetString(string prefix, string key, string defaultValue)
+        {
+            if (string.IsNullOrEmpty(key)) return defaultValue;
+            lock (_gate)
+            {
+                string savedPrefix = _prefix;
+                if (_prefix != prefix)
+                {
+                    _prefix = prefix;
+                    _loaded = false;
+                    _values = null;
+                }
+                EnsureLoaded();
+                string v;
+                var result = _values.TryGetValue(prefix + "_" + key, out v) ? v : defaultValue;
+                if (_prefix != savedPrefix)
+                {
+                    _prefix = savedPrefix;
+                    _loaded = false;
+                    _values = null;
+                }
+                return result;
+            }
+        }
+
+        // --- Private helpers ---
 
         private static string KeyWithPrefix(string key) { return _prefix + "_" + key; }
 

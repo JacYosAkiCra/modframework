@@ -16,54 +16,42 @@ namespace ModFramework.UI.Custom
         {
             GameTheme.Initialize();
 
-            GameObject obj = new GameObject("ModInputField");
+            // Instead of building from scratch, spawn the native game input box
+            // This explicitly tells Software Inc. to block hotkey evaluation while typing
+            InputField input = WindowManager.SpawnInputbox();
+            GameObject obj = input.gameObject;
+            obj.name = "ModInputField";
             obj.transform.SetParent(parent.transform, false);
 
-            // Background
-            Image bg = obj.AddComponent<Image>();
-            bg.color = GameTheme.InputBackground;
+            // Re-style the native inputbox to match ModFramework
+            Image bg = obj.GetComponent<Image>();
+            if (bg != null) bg.color = GameTheme.InputBackground;
 
-            LayoutElement le = obj.AddComponent<LayoutElement>();
+            LayoutElement le = obj.GetComponent<LayoutElement>();
+            if (le == null) le = obj.AddComponent<LayoutElement>();
             le.preferredHeight = GameTheme.RowHeight;
             le.flexibleWidth = 1f;
 
-            // Text area
-            GameObject textObj = new GameObject("Text");
-            textObj.transform.SetParent(obj.transform, false);
-            Text text = textObj.AddComponent<Text>();
-            text.font = GameTheme.GameFont;
-            text.fontSize = GameTheme.DefaultFontSize;
-            text.color = GameTheme.LabelColor;
-            text.alignment = TextAnchor.MiddleLeft;
-            text.supportRichText = false;
+            // Restyle main text
+            if (input.textComponent != null)
+            {
+                input.textComponent.font = GameTheme.GameFont;
+                input.textComponent.fontSize = GameTheme.DefaultFontSize;
+                input.textComponent.color = GameTheme.LabelColor;
+                input.textComponent.alignment = TextAnchor.MiddleLeft;
+            }
 
-            RectTransform textRect = textObj.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(6f, 2f);
-            textRect.offsetMax = new Vector2(-6f, -2f);
+            // Restyle placeholder
+            Text placeholder = input.placeholder as Text;
+            if (placeholder != null)
+            {
+                placeholder.font = GameTheme.GameFont;
+                placeholder.fontSize = GameTheme.DefaultFontSize;
+                placeholder.fontStyle = FontStyle.Italic;
+                placeholder.color = new Color(GameTheme.LabelColor.r, GameTheme.LabelColor.g, GameTheme.LabelColor.b, 0.4f);
+                placeholder.alignment = TextAnchor.MiddleLeft;
+            }
 
-            // Placeholder
-            GameObject phObj = new GameObject("Placeholder");
-            phObj.transform.SetParent(obj.transform, false);
-            Text placeholder = phObj.AddComponent<Text>();
-            placeholder.font = GameTheme.GameFont;
-            placeholder.fontSize = GameTheme.DefaultFontSize;
-            placeholder.fontStyle = FontStyle.Italic;
-            placeholder.color = new Color(GameTheme.LabelColor.r, GameTheme.LabelColor.g, GameTheme.LabelColor.b, 0.4f);
-            placeholder.alignment = TextAnchor.MiddleLeft;
-            placeholder.text = "";
-
-            RectTransform phRect = phObj.GetComponent<RectTransform>();
-            phRect.anchorMin = Vector2.zero;
-            phRect.anchorMax = Vector2.one;
-            phRect.offsetMin = new Vector2(6f, 2f);
-            phRect.offsetMax = new Vector2(-6f, -2f);
-
-            // InputField component
-            InputField input = obj.AddComponent<InputField>();
-            input.textComponent = text;
-            input.placeholder = placeholder;
             input.text = initial ?? "";
             input.caretColor = GameTheme.LabelColor;
 
@@ -71,6 +59,18 @@ namespace ModFramework.UI.Custom
                 input.onValueChanged.AddListener(val => onChange(val));
 
             return input;
+        }
+
+        /// <summary>
+        /// Returns true if any ModFramework InputField currently has keyboard focus.
+        /// Use this to suppress game keybinds while the user is typing.
+        /// </summary>
+        public static bool IsAnyInputFieldFocused()
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null || es.currentSelectedGameObject == null) return false;
+            var input = es.currentSelectedGameObject.GetComponent<InputField>();
+            return input != null && input.isFocused;
         }
     }
 

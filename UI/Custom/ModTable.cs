@@ -10,6 +10,7 @@ namespace ModFramework.UI.Custom
         public string HeaderName;
         public float Width; // Use 0 for flexible width, >0 for fixed pixel width
         public Action<T, GameObject> OnBindCell;
+        public Func<T, IComparable> SortKey; // Optional sorting key
     }
 
     /// <summary>
@@ -22,6 +23,9 @@ namespace ModFramework.UI.Custom
         public GameObject Root { get; private set; }
 
         private List<ModTableColumn<T>> _columns;
+        private List<Text> _headerTexts = new List<Text>();
+        private int _sortColumnIndex = -1;
+        private bool _sortAscending = true;
 
         private ModTable() { }
 
@@ -41,6 +45,10 @@ namespace ModFramework.UI.Custom
             VerticalLayoutGroup rootLayout = table.Root.GetComponent<VerticalLayoutGroup>();
             rootLayout.childControlHeight = true;
             rootLayout.childForceExpandHeight = false;
+            
+            LayoutElement tableRootLe = table.Root.AddComponent<LayoutElement>();
+            tableRootLe.flexibleHeight = 1f;
+            tableRootLe.flexibleWidth = 1f;
 
             // Build Headers
             GameObject headerRow = ModPanel.CreateHorizontal(table.Root);
@@ -50,10 +58,42 @@ namespace ModFramework.UI.Custom
             headerRow.GetComponent<HorizontalLayoutGroup>().padding = new RectOffset(4, 4, 4, 4);
             headerRow.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.1f); // Subtle background for headers
             
-            foreach (var col in columns)
+            for (int i = 0; i < columns.Count; i++)
             {
+                var col = columns[i];
+                int colIndex = i; // capture index for closure
                 Text headerText = ModHeader.Create(col.HeaderName, headerRow);
                 headerText.alignment = TextAnchor.MiddleLeft;
+                table._headerTexts.Add(headerText);
+                
+                // If sortable, add button behavior
+                if (col.SortKey != null)
+                {
+                    // Convert the header into a clickable button
+                    Button headerBtn = headerText.gameObject.AddComponent<Button>();
+                    
+                    // Create a child object for the hit box to avoid Graphic conflicts
+                    GameObject hitBoxObj = new GameObject("HitBox");
+                    RectTransform hitBoxRect = hitBoxObj.AddComponent<RectTransform>();
+                    hitBoxRect.SetParent(headerText.transform, false);
+                    hitBoxRect.anchorMin = Vector2.zero;
+                    hitBoxRect.anchorMax = Vector2.one;
+                    hitBoxRect.offsetMin = Vector2.zero;
+                    hitBoxRect.offsetMax = Vector2.zero;
+                    
+                    Image hitBox = hitBoxObj.AddComponent<Image>();
+                    hitBox.color = Color.clear;
+                    headerBtn.targetGraphic = hitBox;
+                    
+                    ColorBlock cb = headerBtn.colors;
+                    cb.normalColor = Color.clear;
+                    cb.highlightedColor = new Color(0, 0, 0, 0.1f);
+                    cb.pressedColor = new Color(0, 0, 0, 0.2f);
+                    cb.colorMultiplier = 1f;
+                    headerBtn.colors = cb;
+                    
+                    headerBtn.onClick.AddListener(() => table.SortByColumn(colIndex));
+                }
                 
                 // ModHeader.Create already adds a LayoutElement - use it, don't add a duplicate!
                 LayoutElement le = headerText.gameObject.GetComponent<LayoutElement>();
@@ -128,6 +168,13 @@ namespace ModFramework.UI.Custom
                         if (i < rowObj.transform.childCount)
                         {
                             Transform cellTransform = rowObj.transform.GetChild(i);
+                            // Prevent GameObject leak: clear old bind contents before rebinding
+                            for (int c = cellTransform.childCount - 1; c >= 0; c--)
+                            {
+                                GameObject oldChild = cellTransform.GetChild(c).gameObject;
+                                oldChild.transform.SetParent(null, false);
+                                GameObject.Destroy(oldChild);
+                            }
                             table._columns[i].OnBindCell(item, cellTransform.gameObject);
                         }
                     }
@@ -153,6 +200,55 @@ namespace ModFramework.UI.Custom
         public void SetData(IEnumerable<T> items)
         {
             ListView.SetData(items);
+        }
+
+        public void SortByColumn(int columnIndex, bool? ascending = null)
+        {
+            if (columnIndex < 0 || columnIndex >= _columns.Count) return;
+            var col = _columns[columnIndex];
+            if (col.SortKey == null) return;
+
+            if (ascending.HasValue)
+            {
+                _sortAscending = ascending.Value;
+            }
+            else
+            {
+                // Toogle if clicking same column, else default to descending first (usually want highest sales/qty first)
+                if (_sortColumnIndex == columnIndex)
+                    _sortAscending = !_sortAscending;
+                else
+                    _sortAscending = false; 
+            }
+
+            _sortColumnIndex = columnIndex;
+
+            // Update Header UI
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                string baseName = _columns[i].HeaderName;
+                if (i == _sortColumnIndex)
+                {
+                    _headerTexts[i].text = baseName + (_sortAscending ? " ▲" : " ▼");
+                }
+                else
+                {
+                    _headerTexts[i].text = baseName;
+                }
+            }
+
+            // Apply Sort to ListView
+            ListView.SetSort((a, b) =>
+            {
+                var valA = col.SortKey(a);
+                var valB = col.SortKey(b);
+                if (valA == null && valB == null) return 0;
+                if (valA == null) return 1;
+                if (valB == null) return -1;
+
+                int result = valA.CompareTo(valB);
+                return _sortAscending ? result : -result;
+            });
         }
     }
 }

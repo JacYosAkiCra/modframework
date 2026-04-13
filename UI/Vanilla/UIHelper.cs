@@ -410,6 +410,326 @@ namespace ModFramework
             return comboBox;
         }
 
+        // ========== SETTINGS HELPERS ==========
+        // High-level methods for mod settings screens (ConstructOptionsScreen).
+        // Each method creates a label + widget + status feedback, saves via ModSettings,
+        // and returns the updated yOffset for vertical layout.
+
+        /// <summary>
+        /// Adds a labeled slider setting that auto-persists via ModSettings.
+        /// Best for small ranges (e.g. 0-100%) where a slider feels natural.
+        /// Returns the updated yOffset for the next element.
+        /// </summary>
+        /// <param name="parent">The parent RectTransform (from ConstructOptionsScreen)</param>
+        /// <param name="yOffset">Current vertical offset</param>
+        /// <param name="displayName">Label text shown to the user</param>
+        /// <param name="settingsKey">ModSettings key to read/write</param>
+        /// <param name="defaultValue">Default value if setting doesn't exist</param>
+        /// <param name="min">Minimum slider value</param>
+        /// <param name="max">Maximum slider value</param>
+        /// <param name="wholeNumbers">If true, slider snaps to integers</param>
+        /// <param name="formatLabel">Function to format the label text from the current value. 
+        /// If null, displays "{displayName}: {value}"</param>
+        public static float AddSettingSlider(
+            RectTransform parent, float yOffset,
+            string displayName, string settingsKey, float defaultValue,
+            float min, float max, bool wholeNumbers,
+            System.Func<float, string> formatLabel = null)
+        {
+            float currentValue = wholeNumbers
+                ? ModSettings.GetInt(settingsKey, (int)defaultValue)
+                : ModSettings.GetFloat(settingsKey, defaultValue);
+
+            // Label
+            Text label = WindowManager.SpawnLabel();
+            label.text = formatLabel != null
+                ? formatLabel(currentValue)
+                : $"{displayName}: {(wholeNumbers ? ((int)currentValue).ToString() : currentValue.ToString("F2"))}";
+            label.color = Color.black;
+            label.fontSize = 13;
+            WindowManager.AddElementToElement(label.gameObject, parent.gameObject,
+                new Rect(0, yOffset, 350, 25), new Rect(0.01f, 0.01f, 0, 0));
+            yOffset += 25f;
+
+            // Slider
+            Slider slider = WindowManager.SpawnSlider();
+            slider.minValue = min;
+            slider.maxValue = max;
+            slider.wholeNumbers = wholeNumbers;
+            slider.value = currentValue;
+            slider.onValueChanged.AddListener(val =>
+            {
+                if (wholeNumbers)
+                    ModSettings.SetInt(settingsKey, Mathf.RoundToInt(val));
+                else
+                    ModSettings.SetFloat(settingsKey, val);
+
+                label.text = formatLabel != null
+                    ? formatLabel(val)
+                    : $"{displayName}: {(wholeNumbers ? Mathf.RoundToInt(val).ToString() : val.ToString("F2"))}";
+            });
+            WindowManager.AddElementToElement(slider.gameObject, parent.gameObject,
+                new Rect(0, yOffset, 300, 20), new Rect(0.01f, 0.01f, 0, 0));
+            yOffset += 35f;
+
+            return yOffset;
+        }
+
+        /// <summary>
+        /// Adds a labeled text input setting that auto-persists via ModSettings.
+        /// Best for wide numeric ranges (e.g. 1-999) where sliders are too sensitive.
+        /// The value is validated, clamped, and saved on end-edit (Enter key or click away).
+        /// Returns the updated yOffset for the next element.
+        /// </summary>
+        /// <param name="parent">The parent RectTransform (from ConstructOptionsScreen)</param>
+        /// <param name="yOffset">Current vertical offset</param>
+        /// <param name="displayName">Label text shown to the user</param>
+        /// <param name="settingsKey">ModSettings key to read/write</param>
+        /// <param name="defaultValue">Default value if setting doesn't exist</param>
+        /// <param name="min">Minimum accepted value</param>
+        /// <param name="max">Maximum accepted value</param>
+        /// <param name="wholeNumbers">If true, values are rounded to integers</param>
+        /// <param name="suffix">Optional suffix for the status label (e.g. "x" for multipliers)</param>
+        public static float AddSettingInput(
+            RectTransform parent, float yOffset,
+            string displayName, string settingsKey, float defaultValue,
+            float min, float max, bool wholeNumbers, string suffix = "")
+        {
+            float currentValue = wholeNumbers
+                ? ModSettings.GetInt(settingsKey, (int)defaultValue)
+                : ModSettings.GetFloat(settingsKey, defaultValue);
+
+            // Label with range hint
+            Text label = WindowManager.SpawnLabel();
+            string rangeHint = wholeNumbers
+                ? $"{(int)min} - {(int)max}"
+                : $"{min:F1} - {max:F1}";
+            label.text = $"{displayName} ({rangeHint}):";
+            label.color = Color.black;
+            label.fontSize = 13;
+            WindowManager.AddElementToElement(label.gameObject, parent.gameObject,
+                new Rect(0, yOffset, 350, 25), new Rect(0.01f, 0.01f, 0, 0));
+            yOffset += 25f;
+
+            // Status label (shows current value or error)
+            Text statusLabel = WindowManager.SpawnLabel();
+            statusLabel.text = FormatSettingStatus(currentValue, wholeNumbers, suffix);
+            statusLabel.color = new Color(0.2f, 0.5f, 0.2f); // dark green = valid
+            statusLabel.fontSize = 12;
+            WindowManager.AddElementToElement(statusLabel.gameObject, parent.gameObject,
+                new Rect(200, yOffset, 180, 22), new Rect(0.01f, 0.01f, 0, 0));
+
+            // Text input field
+            InputField input = WindowManager.SpawnInputbox();
+            input.contentType = wholeNumbers
+                ? InputField.ContentType.IntegerNumber
+                : InputField.ContentType.DecimalNumber;
+            // Ensure text is visible on light backgrounds
+            if (input.textComponent != null)
+                input.textComponent.color = Color.black;
+            input.text = wholeNumbers
+                ? ((int)currentValue).ToString()
+                : currentValue.ToString("F2");
+
+            // Validate, clamp, and save on end-edit
+            input.onEndEdit.AddListener(text =>
+            {
+                float parsed;
+                if (float.TryParse(text, out parsed))
+                {
+                    parsed = Mathf.Clamp(parsed, min, max);
+                    if (wholeNumbers)
+                    {
+                        int intVal = Mathf.RoundToInt(parsed);
+                        ModSettings.SetInt(settingsKey, intVal);
+                        input.text = intVal.ToString();
+                        statusLabel.text = FormatSettingStatus(intVal, true, suffix);
+                    }
+                    else
+                    {
+                        ModSettings.SetFloat(settingsKey, parsed);
+                        input.text = parsed.ToString("F2");
+                        statusLabel.text = FormatSettingStatus(parsed, false, suffix);
+                    }
+                    statusLabel.color = new Color(0.2f, 0.5f, 0.2f);
+                }
+                else
+                {
+                    statusLabel.text = "Invalid number";
+                    statusLabel.color = Color.red;
+                }
+            });
+
+            WindowManager.AddElementToElement(input.gameObject, parent.gameObject,
+                new Rect(0, yOffset, 190, 22), new Rect(0.01f, 0.01f, 0, 0));
+            yOffset += 32f;
+
+            return yOffset;
+        }
+
+        private static string FormatSettingStatus(float value, bool wholeNumbers, string suffix)
+        {
+            string formatted = wholeNumbers ? ((int)value).ToString() : value.ToString("F2");
+            return $"Current: {formatted}{suffix}";
+        }
+
+        // ========== SCOPED SETTINGS HELPERS (RECOMMENDED) ==========
+        // These overloads accept a ModSettingsScope, making them safe for multi-mod use.
+
+        /// <summary>
+        /// Scoped version of AddSettingSlider. Uses ModSettingsScope instead of global prefix.
+        /// </summary>
+        public static float AddSettingSlider(
+            RectTransform parent, float yOffset,
+            string displayName, string settingsKey, float defaultValue,
+            float min, float max, bool wholeNumbers,
+            ModSettingsScope scope,
+            System.Func<float, string> formatLabel = null)
+        {
+            float currentValue = wholeNumbers
+                ? scope.GetInt(settingsKey, (int)defaultValue)
+                : scope.GetFloat(settingsKey, defaultValue);
+
+            Text label = WindowManager.SpawnLabel();
+            label.text = formatLabel != null
+                ? formatLabel(currentValue)
+                : $"{displayName}: {(wholeNumbers ? ((int)currentValue).ToString() : currentValue.ToString("F2"))}";
+            label.color = Color.black;
+            label.fontSize = 13;
+            WindowManager.AddElementToElement(label.gameObject, parent.gameObject,
+                new Rect(0, yOffset, 350, 25), new Rect(0.01f, 0.01f, 0, 0));
+            yOffset += 25f;
+
+            Slider slider = WindowManager.SpawnSlider();
+            slider.minValue = min;
+            slider.maxValue = max;
+            slider.wholeNumbers = wholeNumbers;
+            slider.value = currentValue;
+            slider.onValueChanged.AddListener(val =>
+            {
+                if (wholeNumbers)
+                    scope.SetInt(settingsKey, Mathf.RoundToInt(val));
+                else
+                    scope.SetFloat(settingsKey, val);
+
+                label.text = formatLabel != null
+                    ? formatLabel(val)
+                    : $"{displayName}: {(wholeNumbers ? Mathf.RoundToInt(val).ToString() : val.ToString("F2"))}";
+            });
+            WindowManager.AddElementToElement(slider.gameObject, parent.gameObject,
+                new Rect(0, yOffset, 300, 20), new Rect(0.01f, 0.01f, 0, 0));
+            yOffset += 35f;
+
+            return yOffset;
+        }
+
+        /// <summary>
+        /// Scoped version of AddSettingInput. Uses ModSettingsScope instead of global prefix.
+        /// </summary>
+        public static float AddSettingInput(
+            RectTransform parent, float yOffset,
+            string displayName, string settingsKey, float defaultValue,
+            float min, float max, bool wholeNumbers,
+            ModSettingsScope scope, string suffix = "")
+        {
+            float currentValue = wholeNumbers
+                ? scope.GetInt(settingsKey, (int)defaultValue)
+                : scope.GetFloat(settingsKey, defaultValue);
+
+            Text label = WindowManager.SpawnLabel();
+            string rangeHint = wholeNumbers
+                ? $"{(int)min} - {(int)max}"
+                : $"{min:F1} - {max:F1}";
+            label.text = $"{displayName} ({rangeHint}):";
+            label.color = Color.black;
+            label.fontSize = 13;
+            WindowManager.AddElementToElement(label.gameObject, parent.gameObject,
+                new Rect(0, yOffset, 350, 25), new Rect(0.01f, 0.01f, 0, 0));
+            yOffset += 25f;
+
+            Text statusLabel = WindowManager.SpawnLabel();
+            statusLabel.text = FormatSettingStatus(currentValue, wholeNumbers, suffix);
+            statusLabel.color = new Color(0.2f, 0.5f, 0.2f);
+            statusLabel.fontSize = 12;
+            WindowManager.AddElementToElement(statusLabel.gameObject, parent.gameObject,
+                new Rect(200, yOffset, 180, 30), new Rect(0.01f, 0.01f, 0, 0));
+
+            InputField input = WindowManager.SpawnInputbox();
+            input.contentType = wholeNumbers
+                ? InputField.ContentType.IntegerNumber
+                : InputField.ContentType.DecimalNumber;
+
+            // Parent the input FIRST so its RectTransform is properly sized
+            WindowManager.AddElementToElement(input.gameObject, parent.gameObject,
+                new Rect(0, yOffset, 190, 30), new Rect(0.01f, 0.01f, 0, 0));
+
+            // Force internal text component RectTransform to fill the input field
+            if (input.textComponent != null)
+            {
+                RectTransform textRect = input.textComponent.GetComponent<RectTransform>();
+                if (textRect != null)
+                {
+                    textRect.anchorMin = Vector2.zero;
+                    textRect.anchorMax = Vector2.one;
+                    textRect.offsetMin = new Vector2(5, 2);
+                    textRect.offsetMax = new Vector2(-5, -6);
+                }
+                input.textComponent.color = Color.black;
+                input.textComponent.fontSize = 13;
+            }
+
+            // Fix placeholder RectTransform too
+            if (input.placeholder != null)
+            {
+                RectTransform phRect = input.placeholder.GetComponent<RectTransform>();
+                if (phRect != null)
+                {
+                    phRect.anchorMin = Vector2.zero;
+                    phRect.anchorMax = Vector2.one;
+                    phRect.offsetMin = new Vector2(5, 2);
+                    phRect.offsetMax = new Vector2(-5, -6);
+                }
+            }
+
+            // Set text AFTER parenting and layout fix so it renders correctly
+            input.text = wholeNumbers
+                ? ((int)currentValue).ToString()
+                : currentValue.ToString("F2");
+            input.ForceLabelUpdate();
+
+            input.onEndEdit.AddListener(text =>
+            {
+                float parsed;
+                if (float.TryParse(text, out parsed))
+                {
+                    parsed = Mathf.Clamp(parsed, min, max);
+                    if (wholeNumbers)
+                    {
+                        int intVal = Mathf.RoundToInt(parsed);
+                        scope.SetInt(settingsKey, intVal);
+                        input.text = intVal.ToString();
+                        statusLabel.text = FormatSettingStatus(intVal, true, suffix);
+                    }
+                    else
+                    {
+                        scope.SetFloat(settingsKey, parsed);
+                        input.text = parsed.ToString("F2");
+                        statusLabel.text = FormatSettingStatus(parsed, false, suffix);
+                    }
+                    statusLabel.color = new Color(0.2f, 0.5f, 0.2f);
+                }
+                else
+                {
+                    statusLabel.text = "Invalid number";
+                    statusLabel.color = Color.red;
+                }
+            });
+
+            yOffset += 38f;
+
+            return yOffset;
+        }
+
         // ========== WINDOWS ==========
         
         public static GUIWindow CreateWindow(string title)
