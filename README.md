@@ -108,3 +108,17 @@ Copy `ModFramework.cs` into your mod folder and deploy it as a `.cs` file to `DL
 
 ## Documentation
 For the complete setup guide, full API reference, v4 Game Data Wrappers, Lifecycle Hooks, and UI cookbook, please see the [Documentation](DOCUMENTATION.md).
+
+---
+
+## Included Dependencies
+
+**Harmony 2.4.1** is bundled in the `Harmony/` folder so you do not need to install it separately. It is used by `ModPatching` for runtime method patching.
+
+## Third-Party Licenses
+
+| Library | Version | License | Author |
+|---------|---------|---------|--------|
+| [Harmony](https://github.com/pardeike/Harmony) | 2.4.1 | MIT | Andreas Pardeike |
+
+See `Harmony/LICENSE` for the full Harmony license text.

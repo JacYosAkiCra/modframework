@@ -1,6 +1,10 @@
 # ModFramework Documentation
 
-## 📁 Project Structure
+Full API reference, setup guide, and project structure for ModFramework v4.1.
+
+---
+
+## Project Structure
 
 ```
 ModFramework/
@@ -8,7 +12,7 @@ ModFramework/
 |-- ModFramework.csproj             Project file
 |-- README.md                       High-level overview
 |-- DOCUMENTATION.md                This file - full API reference
-|-- LICENSE                         MIT License
+|-- LICENSE                         MIT License (ModFramework)
 |
 |-- Core/                           (8 files - Utilities & Infrastructure)
 |   |-- ModLogger.cs                Buffered logging with severity levels
@@ -17,7 +21,7 @@ ModFramework/
 |   |-- ModUtils.cs                 General utilities
 |   |-- Notifications.cs            In-game toast notifications
 |   |-- ModLifecycle.cs             Mod activation/deactivation lifecycle hooks
-|   |-- ModPatching.cs              Runtime method patching helpers
+|   |-- ModPatching.cs              Runtime method patching helpers (uses Harmony)
 |   |-- ModSafety.cs                Error handling and safety wrappers
 |
 |-- GameData/                       (4 files - Game Data Helpers)
@@ -25,6 +29,10 @@ ModFramework/
 |   |-- ModEmployeeHelper.cs        Employee data access and utilities
 |   |-- ModMarketHelper.cs          Market/industry data access and utilities
 |   |-- ModProductHelper.cs         Product data access and utilities
+|
+|-- Harmony/                        (Bundled dependency - no separate install needed)
+|   |-- 0Harmony.dll                Harmony 2.4.1 runtime patching library
+|   |-- LICENSE                     MIT License (Andreas Pardeike)
 |
 |-- UI/
 |   |-- Vanilla/
@@ -83,6 +91,52 @@ ModFramework/
 |       |-- ModMeta.json_template
 |       |-- meta.tyd_template
 ```
+
+---
+
+## Getting Started - Create a New Mod
+
+The fastest way to create a new mod is with the scaffolding script. It generates a complete, ready-to-build mod project with all references pre-configured.
+
+### First Run (provide your game directory)
+
+```powershell
+.\ModFramework\Scaffolding\CreateMod.ps1 -ModName "MyAwesomeMod" -GameDir "E:\SteamLibrary\steamapps\common\Software Inc"
+```
+
+The game directory path is validated (it checks for `Assembly-CSharp.dll`) and cached in `.game-directory` so you only need to provide it once.
+
+### Subsequent Runs
+
+```powershell
+.\ModFramework\Scaffolding\CreateMod.ps1 -ModName "AnotherMod"
+```
+
+### What It Generates
+
+```
+YourMod/
+|-- YourModBehaviour.cs      Main mod class with lifecycle hooks
+|-- YourMod.csproj           Pre-configured project file (references game DLLs + ModFramework)
+|-- ModMeta.json             Mod metadata for Software Inc
+|-- meta.tyd                 Mod discovery file
+```
+
+The generated `.csproj` includes a post-build event that automatically copies the compiled DLL and metadata to the game's mod folder.
+
+### Build and Test
+
+1. Add the generated `.csproj` to your Visual Studio solution
+2. Build the solution (Ctrl+Shift+B)
+3. Launch Software Inc and enable your mod in the mod menu
+
+---
+
+## Harmony (Bundled)
+
+ModFramework bundles **Harmony 2.4.1** (`Harmony/0Harmony.dll`) so you do not need to install it separately. The `ModPatching` helper in `Core/` wraps Harmony for common use cases like prefix/postfix patches.
+
+Harmony is licensed under the MIT License by Andreas Pardeike. See `Harmony/LICENSE` for details.
 
 ---
 
@@ -1447,6 +1501,7 @@ namespace MyFirstMod
 
 ## Changelog
 
+- **v4.1** (April 2026) - Bundled Harmony 2.4.1 DLL (no separate install needed), updated scaffolding with `-GameDir` parameter and path validation, replaced all hardcoded game paths with `{GAME_DIRECTORY}` tokens
 - **v4.0** (March 2026) - Accessible DLL modding: Game Data Wrappers, Lifecycle Hooks, Error Safety, Harmony Helpers, Project Scaffolding
 - **v3.0** (March 2026) - Complete Custom UI system (31 files), replaced legacy UIHelper as primary UI approach, added Resize, Hotkeys, and Node Graphs
 - **v2.0** (October 2025) - Core split into 5 files, added UIHelper
