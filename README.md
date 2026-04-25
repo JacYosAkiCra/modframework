@@ -23,13 +23,40 @@ Modding Software Inc can be difficult for beginners. The base game uses complex 
 
 ## Quick Start - Create a New Mod (v4)
 
-The fastest way to start is with the scaffolding script:
+You can scaffold a new mod using either the CLI script or the GUI script.
+
+### Option 1: CLI
+
+Show CLI help (parameters, usage, examples):
+
+```powershell
+.\ModFramework\Scaffolding\CreateMod.ps1 -Help
+```
+
+Create a mod from CLI:
 
 ```powershell
 .\ModFramework\Scaffolding\CreateMod.ps1 -ModName "MyAwesomeMod"
 ```
 
-This generates a complete, ready-to-build mod project with all references configured and a post-build event that automatically copies your DLL to the game's mod folder.
+### Option 2: GUI
+
+Launch the GUI:
+
+```powershell
+.\ModFramework\Scaffolding\CreateModGUI.ps1
+```
+
+In the GUI:
+1. Enter Mod Name.
+2. Select Game Directory.
+3. (Optional) Select Mod Directory.
+4. (Optional) Enable Build ModFramework immediately.
+5. Click Run CreateMod.
+
+Open GUI help from Help -> Usage (or press F1).
+
+Both CLI and GUI generate a complete, ready-to-build mod project with references configured and a post-build event that automatically copies your DLL to the game's mod folder.
 
 ## Quick Start - UI Example
 

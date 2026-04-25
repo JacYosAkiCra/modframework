@@ -40,11 +40,11 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="ModFramework">
-      <HintPath>..\ModFramework\bin\Release\ModFramework.dll</HintPath>
+      <HintPath>{MODFRAMEWORK_BIN}\ModFramework.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="0Harmony">
-      <HintPath>..\ModFramework\bin\Release\0Harmony.dll</HintPath>
+      <HintPath>{MODFRAMEWORK_BIN}\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />

@@ -84,10 +84,12 @@ ModFramework/
 |           |-- ModUITestWindow.cs  Built-in test/demo window
 |
 |-- Scaffolding/                    (Mod Generator)
-|   |-- CreateMod.ps1               PowerShell script to scaffold a new mod project
-|   |-- Templates/
+|   |-- CreateMod.ps1               PowerShell script to scaffold a new mod project using PowerShell
+|   |-- CreateModGUI.ps1            PowerShell script to scaffold a new mod project using GUI
+    |-- Templates/
 |       |-- MainBehaviour.cs_template
 |       |-- Mod.csproj_template
+        |-- ModFramework.csproj_template
 |       |-- ModMeta.json_template
 |       |-- meta.tyd_template
 ```
@@ -96,7 +98,16 @@ ModFramework/
 
 ## Getting Started - Create a New Mod
 
-The fastest way to create a new mod is with the scaffolding script. It generates a complete, ready-to-build mod project with all references pre-configured.
+The fastest way to create a new mod is with the scaffolding tools. They generate a complete, ready-to-build mod project with all references pre-configured.
+
+### Option 1: CLI (CreateMod.ps1)
+
+### Help
+The below command will display parameters, usage, and examples.
+
+```powershell
+.\ModFramework\Scaffolding\CreateMod.ps1 -help
+```
 
 ### First Run (provide your game directory)
 
@@ -111,6 +122,33 @@ The game directory path is validated (it checks for `Assembly-CSharp.dll`) and c
 ```powershell
 .\ModFramework\Scaffolding\CreateMod.ps1 -ModName "AnotherMod"
 ```
+
+### Option 2: GUI (CreateModGUI.ps1)
+
+Launch the GUI from the repository root:
+
+```powershell
+.\ModFramework\Scaffolding\CreateModGUI.ps1
+```
+
+Or, if you are already inside `Scaffolding/`:
+
+```powershell
+.\CreateModGUI.ps1
+```
+
+#### GUI Steps
+
+1. Enter **Mod Name** (valid C# identifier).
+2. Set **Game Directory** (or click **Browse Game Dir**).
+3. Optionally set **Mod Directory** (or click **Browse Mod Dir**).
+4. Optionally check **Build ModFramework immediately (-Build)**.
+5. Click **Run CreateMod** and monitor **CLI Output**.
+
+#### GUI Help Menu
+
+- Open **Help -> Usage** (or press **F1**) to view GUI instructions.
+- Open **Help -> About** for a quick summary of the GUI tool.
 
 ### What It Generates
 
