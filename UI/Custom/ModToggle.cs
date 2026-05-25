@@ -50,6 +50,8 @@ namespace ModFramework.UI.Custom
             checkText.fontSize = GameTheme.DefaultFontSize;
             checkText.color = GameTheme.HeaderColor;
             checkText.alignment = TextAnchor.MiddleCenter;
+            // Don't let child text intercept pointer events.
+            checkText.raycastTarget = false;
 
             RectTransform cmRect = checkmark.GetComponent<RectTransform>();
             cmRect.anchorMin = Vector2.zero;
@@ -65,6 +67,7 @@ namespace ModFramework.UI.Custom
             labelText.fontSize = GameTheme.DefaultFontSize;
             labelText.color = GameTheme.LabelColor;
             labelText.alignment = TextAnchor.MiddleLeft;
+            labelText.raycastTarget = false;
             LayoutElement labelLE = labelObj.AddComponent<LayoutElement>();
             labelLE.flexibleWidth = 1f;
 

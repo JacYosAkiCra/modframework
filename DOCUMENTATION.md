@@ -1,142 +1,220 @@
-# ModFramework Documentation
+# 🚀 Software Inc Modding - Project Setup Guide
 
-Full API reference, setup guide, and project structure for ModFramework v4.1.
-
----
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-ModFramework/
-|-- ModFramework.cs                 Module index / version header
-|-- ModFramework.csproj             Project file
-|-- README.md                       High-level overview
-|-- DOCUMENTATION.md                This file - full API reference
-|-- LICENSE                         MIT License (ModFramework)
-|
-|-- Core/                           (8 files - Utilities & Infrastructure)
-|   |-- ModLogger.cs                Buffered logging with severity levels
-|   |-- ModEvents.cs                Pub/sub event bus
-|   |-- ModSettings.cs              Persistent key-value storage (Base64)
-|   |-- ModUtils.cs                 General utilities
-|   |-- Notifications.cs            In-game toast notifications
-|   |-- ModLifecycle.cs             Mod activation/deactivation lifecycle hooks
-|   |-- ModPatching.cs              Runtime method patching helpers (uses Harmony)
-|   |-- ModSafety.cs                Error handling and safety wrappers
-|
-|-- GameData/                       (4 files - Game Data Helpers)
-|   |-- ModCompanyHelper.cs         Company data access and utilities
-|   |-- ModEmployeeHelper.cs        Employee data access and utilities
-|   |-- ModMarketHelper.cs          Market/industry data access and utilities
-|   |-- ModProductHelper.cs         Product data access and utilities
-|
-|-- Harmony/                        (Bundled dependency - no separate install needed)
-|   |-- 0Harmony.dll                Harmony 2.4.1 runtime patching library
-|   |-- LICENSE                     MIT License (Andreas Pardeike)
-|
-|-- UI/
-|   |-- Vanilla/
-|   |   |-- UIHelper.cs             Legacy game-prefab based UI (kept for compat)
-|   |
-|   |-- Custom/                     (35 files - Custom UI Framework)
-|       |
-|       |-- [Foundation]
-|       |   |-- GameTheme.cs        Auto-samples game colors/fonts/sizes
-|       |   |-- ModWindow.cs        Draggable, collapsible, pinnable window
-|       |   |-- ModWindowRegistry.cs   Singleton tracking, z-order, focus
-|       |   |-- ModRefreshDriver.cs    Live refresh MonoBehaviour (ticks callbacks)
-|       |   |-- DragHandler.cs      Drag-to-move MonoBehaviour
-|       |   |-- HoverHandler.cs     Hover color shift MonoBehaviour
-|       |   |-- FocusTracker.cs     Click-to-focus MonoBehaviour
-|       |   |-- ResizeHandler.cs    Bottom right drag-to-resize grip
-|       |   |-- ModHotkeyRegistry.cs   Centralized keybind manager
-|       |   |-- ModHotkeyPoller.cs     Input polling loop
-|       |
-|       |-- [Widgets]
-|       |   |-- ModButton.cs        Themed button with hover/press
-|       |   |-- ModLabel.cs         Text label + ModHeader (bold section header)
-|       |   |-- ModInputField.cs    Single-line input + ModTextArea + ModSearchField + ModNumericInput
-|       |   |-- ModToggle.cs        Checkbox + ModSlider
-|       |   |-- ModScrollView.cs    Scrollable container
-|       |   |-- ModCombobox.cs      Dropdown selector
-|       |   |-- ModProgressBar.cs   Visual progress indicator
-|       |   |-- ModPanel.cs         Vertical/horizontal layout container
-|       |   |-- ModKeybind.cs       Press-any-key hotkey binder
-|       |
-|       |-- [Data Views]
-|       |   |-- ModListView.cs      Generic pooled list with search + pagination
-|       |   |-- ModTable.cs         Column-based table built on ModListView
-|       |   |-- ModHUD.cs           Screen-edge overlay
-|       |   |-- ModDialog.cs        Modal message/confirm dialogs
-|       |   |-- ModTooltip.cs       Mouse-follow tooltip
-|       |   |-- ModConsoleWindow.cs Debug log viewer
-|       |
-|       |-- [Advanced]
-|           |-- ModBarChart.cs      Horizontal bar chart
-|           |-- ModPieChart.cs      Radial fill pie chart with labels
-|           |-- ModLineChart.cs     Mesh-based smooth line chart (MaskableGraphic)
-|           |-- ModAccordion.cs     Collapsible sections
-|           |-- ModContextMenu.cs   Right-click context menu
-|           |-- ModSplitPane.cs     Side-by-side split panels
-|           |-- ModCardLayout.cs    Grid card layout
-|           |-- ModNotificationBadge.cs  Counter badge (attaches to any element)
-|           |-- ModNodeGraph.cs     Visual node graph and tech tree (MaskableGraphic edges)
-|           |-- ModUITestWindow.cs  Built-in test/demo window
-|
-|-- Scaffolding/                    (Mod Generator)
-|   |-- CreateMod.ps1               PowerShell script to scaffold a new mod project
-|   |-- Templates/
-|       |-- MainBehaviour.cs_template
-|       |-- Mod.csproj_template
-|       |-- ModMeta.json_template
-|       |-- meta.tyd_template
+SoftwareIncMods.sln
+├── ModFramework/              ← Shared library for all mods
+│   ├── ModFramework.cs       ← UIHelper, ModLogger, Notifications, etc.
+│   ├── ModFramework.csproj
+│   └── README.md
+│
+├── CompatibilityChecker/      ← Your first mod
+│   ├── CompatibilityChecker.cs
+│   ├── CompatibilityCheckerBehaviour.cs
+│   ├── ModDiagnosticsUI.cs
+│   └── CompatibilityChecker.csproj
+│
+└── YourNewMod/               ← Future mods go here
+    ├── YourNewModMeta.cs
+    ├── YourNewModBehaviour.cs
+    └── YourNewMod.csproj
 ```
 
----
+## ✅ What Was Set Up
 
-## Getting Started - Create a New Mod
+### 1. **ModFramework Project**
+- Centralized framework with reusable components
+- All mods copy `ModFramework.cs` during build
+- Located at: `ModFramework/ModFramework.cs`
 
-The fastest way to create a new mod is with the scaffolding script. It generates a complete, ready-to-build mod project with all references pre-configured.
+### 2. **Updated CompatibilityChecker.csproj**
+- Now references ModFramework
+- Post-build event copies all `.cs` files to game folder
+- Automatically deploys on each build
 
-### First Run (provide your game directory)
+### 3. **Build Process**
+When you build in Visual Studio:
+1. All mod `.cs` files are copied to `<YOUR_GAME_DIR>\DLLMods\YourModName\`
+2. `ModFramework.cs` is copied to each mod folder
+3. Software Inc compiles them at runtime
+
+## How to Create a New Mod
+
+### Recommended: Use the Scaffolding Script
+
+The scaffolding script generates a complete mod project with all references configured:
 
 ```powershell
-.\ModFramework\Scaffolding\CreateMod.ps1 -ModName "MyAwesomeMod" -GameDir "E:\SteamLibrary\steamapps\common\Software Inc"
-```
+# First run - provide your game install path (cached for future runs)
+.\ModFramework\Scaffolding\CreateMod.ps1 -ModName "MyAwesomeMod" -GameDir "C:\SteamLibrary\steamapps\common\Software Inc"
 
-The game directory path is validated (it checks for `Assembly-CSharp.dll`) and cached in `.game-directory` so you only need to provide it once.
-
-### Subsequent Runs
-
-```powershell
+# Subsequent runs - path is remembered
 .\ModFramework\Scaffolding\CreateMod.ps1 -ModName "AnotherMod"
 ```
 
-### What It Generates
+What it generates:
+- `MyAwesomeModBehaviour.cs` - Main mod class with lifecycle hooks
+- `ModMeta.json` - Mod metadata
+- `MyAwesomeMod.csproj` - Project file with all HintPaths pointing to YOUR game directory
+- `meta.tyd` - Required by Software Inc for mod discovery
 
+The script validates your game path (checks for `Assembly-CSharp.dll`) and caches it in `.game-directory` so you only enter it once.
+
+### Manual Setup
+
+If you prefer manual setup:
+
+### Step 1: Create New Project
+1. Right-click solution > Add > New Project
+2. Choose "Class Library (.NET Framework 4.8)"
+3. Name it (e.g., "MyAwesomeMod")
+
+### Step 2: Configure Project
+Copy these settings to your new `.csproj`, replacing `<YOUR_GAME_DIR>` with your actual game installation path (e.g., `E:\SteamLibrary\steamapps\common\Software Inc`):
+
+```xml
+<!-- Add references to Unity/Software Inc DLLs -->
+<ItemGroup>
+  <Reference Include="Assembly-CSharp">
+    <HintPath><YOUR_GAME_DIR>\Software Inc_Data\Managed\Assembly-CSharp.dll</HintPath>
+    <Private>False</Private>
+  </Reference>
+  <Reference Include="UnityEngine.CoreModule">
+    <HintPath><YOUR_GAME_DIR>\Software Inc_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    <Private>False</Private>
+  </Reference>
+  <Reference Include="UnityEngine.UI">
+    <HintPath><YOUR_GAME_DIR>\Software Inc_Data\Managed\UnityEngine.UI.dll</HintPath>
+    <Private>False</Private>
+  </Reference>
+</ItemGroup>
+
+<!-- Link ModFramework -->
+<ItemGroup>
+  <Content Include="..\ModFramework\ModFramework.cs">
+    <Link>ModFramework.cs</Link>
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </Content>
+</ItemGroup>
+
+<!-- Post-build: Copy to game folder -->
+<PropertyGroup>
+  <PostBuildEvent>
+if not exist "<YOUR_GAME_DIR>\DLLMods\MyAwesomeMod\" mkdir "<YOUR_GAME_DIR>\DLLMods\MyAwesomeMod\"
+xcopy /Y /R "$(ProjectDir)*.cs" "<YOUR_GAME_DIR>\DLLMods\MyAwesomeMod\"
+xcopy /Y /R "$(ProjectDir)..\ModFramework\ModFramework.cs" "<YOUR_GAME_DIR>\DLLMods\MyAwesomeMod\"
+  </PostBuildEvent>
+</PropertyGroup>
 ```
-YourMod/
-|-- YourModBehaviour.cs      Main mod class with lifecycle hooks
-|-- YourMod.csproj           Pre-configured project file (references game DLLs + ModFramework)
-|-- ModMeta.json             Mod metadata for Software Inc
-|-- meta.tyd                 Mod discovery file
+
+### Step 3: Create Mod Files
+
+**MyAwesomeModMeta.cs:**
+```csharp
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace MyAwesomeMod
+{
+    public class MyAwesomeModMeta : ModMeta
+    {
+        public override string Name
+        {
+            get { return "My Awesome Mod"; }
+        }
+
+        public override void ConstructOptionsScreen(RectTransform parent, bool inGame)
+        {
+            Text label = WindowManager.SpawnLabel();
+            label.text = "My Awesome Mod v1.0";
+            label.color = Color.black;
+            WindowManager.AddElementToElement(label.gameObject, parent.gameObject, 
+                new Rect(0, 0, 400, 120), new Rect(0.01f, 0.01f, 0, 0));
+        }
+    }
+}
 ```
 
-The generated `.csproj` includes a post-build event that automatically copies the compiled DLL and metadata to the game's mod folder.
+**MyAwesomeModBehaviour.cs:**
+```csharp
+using UnityEngine;
+using ModFramework;
 
-### Build and Test
+namespace MyAwesomeMod
+{
+    public class MyAwesomeModBehaviour : ModBehaviour
+    {
+        private void Awake()
+        {
+            ModLogger.SetPrefix("MyAwesomeMod");
+            ModSettings.SetPrefix("MyAwesomeMod");
+        }
 
-1. Add the generated `.csproj` to your Visual Studio solution
-2. Build the solution (Ctrl+Shift+B)
-3. Launch Software Inc and enable your mod in the mod menu
+        public override void OnActivate()
+        {
+            ModLogger.LogSuccess("MY AWESOME MOD ACTIVATED!");
+            Notifications.ShowSuccess("MyAwesomeMod is running!");
+        }
+
+        public override void OnDeactivate()
+        {
+            ModLogger.Log("Mod deactivated");
+        }
+    }
+}
+```
+
+### Step 4: Create meta.tyd
+In `<YOUR_GAME_DIR>\DLLMods\MyAwesomeMod\meta.tyd`:
+
+```tyd
+Name        MyAwesomeMod
+Description "Does awesome things!"
+Author      YourName
+SteamName   MyAwesomeMod
+```
+
+### Step 5: Build and Test
+1. Build in Visual Studio (Ctrl+Shift+B)
+2. Launch Software Inc
+3. Enable your mod in the mod menu
+4. Test it!
+
+## 📚 Using ModFramework
+
+Add to any mod file:
+```csharp
+using ModFramework;
+```
+
+Available components:
+- **UIHelper** - Create windows, buttons, labels, etc.
+- **ModLogger** - Color-coded logging system
+- **Notifications** - In-game popup messages
+- **ModSettings** - Save/load player preferences
+- **ModUtils** - String formatting, number formatting, etc.
+
+See the main `README.md` for complete API documentation.
+
+## 🔧 Troubleshooting
+
+1. **Mod not showing?** Check `Player.log` for compilation errors
+2. **Changes not applying?** Reload mods in-game (Code mods menu)
+3. **Errors?** Make sure all `.cs` files are in the DLLMods folder
+4. **Framework issues?** Verify `ModFramework.cs` is copied to your mod folder
+
+## 🎯 Next Steps
+
+Your setup is complete! You can now:
+1. Test the CompatibilityChecker mod (already working)
+2. Create your next mod using the guide above
+3. Leverage ModFramework to save development time
+
+Happy modding! 🚀
+
 
 ---
-
-## Harmony (Bundled)
-
-ModFramework bundles **Harmony 2.4.1** (`Harmony/0Harmony.dll`) so you do not need to install it separately. The `ModPatching` helper in `Core/` wraps Harmony for common use cases like prefix/postfix patches.
-
-Harmony is licensed under the MIT License by Andreas Pardeike. See `Harmony/LICENSE` for details.
 
 ---
 
@@ -157,10 +235,17 @@ ModLogger.LogError("Critical failure: " + ex.Message);
 
 ### ModSettings
 
-Persistent key-value settings stored on disk (Base64 encoded).
+Persistent key-value settings stored on disk (Base64 encoded, under `Application.persistentDataPath/ModSettings/`).
+
+**Two APIs are available:**
+
+#### Legacy Static API (simple, but has a gotcha)
+
+The static API uses a global prefix set with `SetPrefix()`. This works perfectly when only your mod is loaded, but if multiple DLL mods all call `SetPrefix()`, the last one wins and the others silently read/write to the wrong file.
 
 ```csharp
-using ModFramework.Core;
+// Set up your mod's prefix (call in Awake)
+ModSettings.SetPrefix("MyMod");
 
 // Save settings
 ModSettings.SetFloat("multiplier", 1.5f);
@@ -173,6 +258,87 @@ float mult = ModSettings.GetFloat("multiplier", 1.0f);
 bool enabled = ModSettings.GetBool("feature_on", false);
 string key = ModSettings.GetString("hotkey", "F5");
 int count = ModSettings.GetInt("count", 10);
+```
+
+#### Scoped API (recommended for multi-mod safety)
+
+The scoped API creates an instance that carries its own prefix, so it always reads/writes to the correct file regardless of what other mods do. This is especially important for Harmony patches and background code.
+
+```csharp
+// Create a scope once (store as a static field)
+private static readonly ModSettingsScope Settings = ModSettings.ForMod("MyMod");
+
+// Use it exactly like the static API
+Settings.SetFloat("multiplier", 1.5f);
+float mult = Settings.GetFloat("multiplier", 1.0f);
+
+Settings.SetBool("feature_on", true);
+bool enabled = Settings.GetBool("feature_on", false);
+
+Settings.SetInt("count", 42);
+int count = Settings.GetInt("count", 10);
+
+Settings.SetString("hotkey", "F3");
+string key = Settings.GetString("hotkey", "F5");
+```
+
+**When to use which:**
+- For `ConstructOptionsScreen` callbacks where the game calls `SetPrefix` for you: the legacy static API is fine
+- For Harmony patches, background tasks, or any code shared between multiple mods: use the scoped API
+
+### UIHelper Settings Helpers
+
+High-level methods for building mod settings screens in `ConstructOptionsScreen`. Each creates a label + widget + status feedback, auto-persists via ModSettings, and returns the updated yOffset for vertical stacking.
+
+```csharp
+// In your ModMeta's ConstructOptionsScreen:
+public override void ConstructOptionsScreen(RectTransform parent, bool isInitial)
+{
+    float y = 0f;
+
+    // Slider setting (best for small ranges like 0-100%)
+    y = UIHelper.AddSettingSlider(parent, y,
+        "Speed Multiplier",     // display name
+        "speed_mult",           // settings key
+        1.0f,                   // default value
+        0.5f, 3.0f,             // min / max
+        false                   // wholeNumbers
+    );
+
+    // Text input setting (best for wide ranges like 1-999)
+    y = UIHelper.AddSettingInput(parent, y,
+        "Max Employees",        // display name
+        "max_employees",        // settings key
+        100f,                   // default value
+        1f, 999f,               // min / max
+        true,                   // wholeNumbers
+        suffix: ""              // optional suffix for display
+    );
+}
+```
+
+**Scoped overloads** (recommended when multiple mods are loaded):
+
+```csharp
+private static readonly ModSettingsScope Settings = ModSettings.ForMod("MyMod");
+
+public override void ConstructOptionsScreen(RectTransform parent, bool isInitial)
+{
+    float y = 0f;
+
+    // Same API, just pass the scope as an extra parameter
+    y = UIHelper.AddSettingSlider(parent, y,
+        "Speed Multiplier", "speed_mult", 1.0f,
+        0.5f, 3.0f, false,
+        Settings   // scoped settings instance
+    );
+
+    y = UIHelper.AddSettingInput(parent, y,
+        "Max Employees", "max_employees", 100f,
+        1f, 999f, true,
+        Settings   // scoped settings instance
+    );
+}
 ```
 
 ### ModEvents
@@ -236,6 +402,22 @@ The Custom UI system builds UI elements from raw Unity `GameObjects`, with no de
 | `ModWindow` | `ModWindow` | Full window instance with `.Show()`, `.Hide()`, `.Close()` |
 | `ModListView<T>` | `ModListView<T>` | Data-bound list with `.SetItems()`, `.Refresh()` |
 | `ModTable<T>` | `ModTable<T>` | Table with headers built on `ModListView<T>` |
+
+### Custom UI Performance & Best Practices
+
+When building complex UIs using ModFramework, you must follow these critical rules to avoid major rendering and performance issues inside Software Inc:
+
+#### 1. Avoid Nested `Canvas` Components
+- **The Issue:** Adding a `Canvas` (even with `overrideSorting=false`) to a window root or layout container will often cause the entire UI to become invisible. Software Inc strictly controls the sorting layers of its main canvases.
+- **The Solution:** Never add a `Canvas` to your window root. The only safe place for a nested Canvas is on small overlay elements where you explicitly inherit `sortingLayerID` and `sortingOrder` from the parent.
+
+#### 2. Window Dragging & Resizing (LayoutGroup Cascades)
+- **The Issue:** Complex windows (like `ModTable` with hundreds of rows) generate hundreds of `LayoutGroup` components. Normal drag scripts use `anchoredPosition`, and resize scripts use `sizeDelta`. Changing *either* of these triggers Unity to call `SetDirty()` on **every single child LayoutGroup**, causing massive lag (10 FPS) during window drags or resizes.
+- **The Solution:** The framework's `DragHandler` and `ResizeHandler` solve this by hiding the window's `Content` area during manipulation (`Content.SetActive(false)`), allowing only the title bar / background to render smoothly. If you write custom handlers, you must bypass child layout calculations using similar methods.
+
+#### 3. Overlay Elements (Dropdowns / Comboboxes)
+- **The Issue:** A dropdown options list must render on top of the entire window and cannot be clipped by `ScrollRect` masks or crushed by `HorizontalLayoutGroup` parents.
+- **The Solution:** ModFramework's `ModCombobox` solves this by parenting the expanded dropdown list directly to the **game's root Canvas transform** at runtime. It uses `GetWorldCorners()` to convert the combobox's position to correct absolute world coordinates. **Do not** attempt to nest dropdown options inside the widget hierarchy.
 
 ---
 
@@ -1499,9 +1681,17 @@ namespace MyFirstMod
 
 ---
 
+## Third-Party Licenses
+
+### Harmony
+This project bundles [Harmony](https://github.com/pardeike/Harmony) v2.4.1 by Andreas Pardeike for runtime method patching.
+License: MIT | Copyright (c) 2017 Andreas Pardeike | Full text: [Harmony/LICENSE](Harmony/LICENSE)
+
+---
+
 ## Changelog
 
-- **v4.1** (April 2026) - Bundled Harmony 2.4.1 DLL (no separate install needed), updated scaffolding with `-GameDir` parameter and path validation, replaced all hardcoded game paths with `{GAME_DIRECTORY}` tokens
+- **v4.1** (April 2026) - Bundled Harmony DLL (no NuGet required), generalized game paths with `{GAME_DIRECTORY}` placeholder, added `-GameDir` to scaffolding script with path validation and caching, scoped ModSettings API, UIHelper settings helpers
 - **v4.0** (March 2026) - Accessible DLL modding: Game Data Wrappers, Lifecycle Hooks, Error Safety, Harmony Helpers, Project Scaffolding
 - **v3.0** (March 2026) - Complete Custom UI system (31 files), replaced legacy UIHelper as primary UI approach, added Resize, Hotkeys, and Node Graphs
 - **v2.0** (October 2025) - Core split into 5 files, added UIHelper

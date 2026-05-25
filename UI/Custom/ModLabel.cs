@@ -26,6 +26,8 @@ namespace ModFramework.UI.Custom
             label.color = GameTheme.LabelColor;
             label.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
             label.alignment = TextAnchor.MiddleLeft;
+            // Labels are almost always decorative; avoid blocking pointer events for parents.
+            label.raycastTarget = false;
 
             // Auto-height based on content
             ContentSizeFitter fitter = obj.AddComponent<ContentSizeFitter>();
@@ -82,6 +84,7 @@ namespace ModFramework.UI.Custom
             header.fontStyle = FontStyle.Bold;
             header.color = GameTheme.HeaderColor;
             header.alignment = TextAnchor.MiddleLeft;
+            header.raycastTarget = false;
 
             ContentSizeFitter fitter = obj.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;

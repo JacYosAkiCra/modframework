@@ -48,6 +48,9 @@ namespace ModFramework.UI.Custom
             label.fontSize = GameTheme.DefaultFontSize;
             label.color = GameTheme.LabelColor;
             label.alignment = TextAnchor.MiddleCenter;
+            // Prevent the child label from intercepting pointer events.
+            // We want hover/click/tooltip handlers on the button object to receive the events.
+            label.raycastTarget = false;
 
             RectTransform labelRect = labelObj.GetComponent<RectTransform>();
             labelRect.anchorMin = Vector2.zero;

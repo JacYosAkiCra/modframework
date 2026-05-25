@@ -17,6 +17,7 @@ Modding Software Inc can be difficult for beginners. The base game uses complex 
 
 **Namespace:** `ModFramework.UI.Custom` (UI) / `ModFramework.Core` (utilities) / `ModFramework.GameData` (data wrappers)
 **Requires:** Unity 2019.4 (game's engine), .NET Framework 4.8
+**Dependencies:** Harmony 2.4.1 (bundled, MIT license)
 **License:** MIT - Free to use in any Software Inc mod
 
 ---
@@ -26,10 +27,14 @@ Modding Software Inc can be difficult for beginners. The base game uses complex 
 The fastest way to start is with the scaffolding script:
 
 ```powershell
-.\ModFramework\Scaffolding\CreateMod.ps1 -ModName "MyAwesomeMod"
+# First run - provide your game install path (cached for future runs)
+.\ModFramework\Scaffolding\CreateMod.ps1 -ModName "MyAwesomeMod" -GameDir "C:\SteamLibrary\steamapps\common\Software Inc"
+
+# After first run - path is remembered
+.\ModFramework\Scaffolding\CreateMod.ps1 -ModName "AnotherMod"
 ```
 
-This generates a complete, ready-to-build mod project with all references configured and a post-build event that automatically copies your DLL to the game's mod folder.
+This generates a complete, ready-to-build mod project with all references configured to your local game installation and a post-build event that automatically copies your DLL to the game's mod folder.
 
 ## Quick Start - UI Example
 
@@ -80,7 +85,11 @@ ModLogger.Log("Cash: " + money + ", Employees: " + employees);
 
 ### For DLL Mods (Recommended)
 
-Add all framework files to your `.csproj`:
+**Use the scaffolding script** (see Quick Start above). It generates a complete `.csproj` with all references pointing to your local game installation. No manual path editing needed.
+
+**Harmony is bundled** in `ModFramework/Harmony/0Harmony.dll` so you do not need to install it via NuGet or download it separately.
+
+If you prefer manual setup, add framework files to your `.csproj`:
 
 ```xml
 <!-- Core utilities -->
@@ -111,14 +120,16 @@ For the complete setup guide, full API reference, v4 Game Data Wrappers, Lifecyc
 
 ---
 
-## Included Dependencies
-
-**Harmony 2.4.1** is bundled in the `Harmony/` folder so you do not need to install it separately. It is used by `ModPatching` for runtime method patching.
-
 ## Third-Party Licenses
 
-| Library | Version | License | Author |
-|---------|---------|---------|--------|
-| [Harmony](https://github.com/pardeike/Harmony) | 2.4.1 | MIT | Andreas Pardeike |
+### Harmony
 
-See `Harmony/LICENSE` for the full Harmony license text.
+This project bundles [Harmony](https://github.com/pardeike/Harmony) v2.4.1 by Andreas Pardeike for runtime method patching.
+
+**License:** MIT
+**Copyright:** (c) 2017 Andreas Pardeike
+**Full license:** [Harmony/LICENSE](Harmony/LICENSE)
+
+---
+
+*ModFramework is authored by Zicarius.*

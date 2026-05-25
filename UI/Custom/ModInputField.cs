@@ -35,6 +35,14 @@ namespace ModFramework.UI.Custom
             // Restyle main text
             if (input.textComponent != null)
             {
+                RectTransform textRect = input.textComponent.GetComponent<RectTransform>();
+                if (textRect != null)
+                {
+                    textRect.anchorMin = Vector2.zero;
+                    textRect.anchorMax = Vector2.one;
+                    textRect.offsetMin = new Vector2(4f, 2f);
+                    textRect.offsetMax = new Vector2(-4f, -2f);
+                }
                 input.textComponent.font = GameTheme.GameFont;
                 input.textComponent.fontSize = GameTheme.DefaultFontSize;
                 input.textComponent.color = GameTheme.LabelColor;
@@ -45,6 +53,14 @@ namespace ModFramework.UI.Custom
             Text placeholder = input.placeholder as Text;
             if (placeholder != null)
             {
+                RectTransform phRect = placeholder.GetComponent<RectTransform>();
+                if (phRect != null)
+                {
+                    phRect.anchorMin = Vector2.zero;
+                    phRect.anchorMax = Vector2.one;
+                    phRect.offsetMin = new Vector2(4f, 2f);
+                    phRect.offsetMax = new Vector2(-4f, -2f);
+                }
                 placeholder.font = GameTheme.GameFont;
                 placeholder.fontSize = GameTheme.DefaultFontSize;
                 placeholder.fontStyle = FontStyle.Italic;
@@ -118,12 +134,23 @@ namespace ModFramework.UI.Custom
         {
             InputField input = ModInputField.Create(value.ToString(), null, parent);
             input.contentType = InputField.ContentType.IntegerNumber;
+            bool clamping = false;
             input.onValueChanged.AddListener(val =>
             {
+                if (clamping) return;
                 int parsed;
                 if (int.TryParse(val, out parsed))
                 {
                     parsed = Mathf.Clamp(parsed, min, max);
+                    // Clamp the displayed text too.
+                    // Unity 2018 InputField lacks SetTextWithoutNotify, so we guard recursion.
+                    string clampedStr = parsed.ToString();
+                    if (input.text != clampedStr)
+                    {
+                        clamping = true;
+                        input.text = clampedStr;
+                        clamping = false;
+                    }
                     if (onChange != null) onChange(parsed);
                 }
             });
