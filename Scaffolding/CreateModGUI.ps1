@@ -357,27 +357,55 @@ $btnRun.Add_Click({
 
         $psi.Arguments = ConvertTo-ProcessArgumentString -Arguments $argList.ToArray()
 
+        # Thread-safe queue for output lines produced by async stream handlers
+        # (OutputDataReceived/ErrorDataReceived fire on threadpool threads, drained on UI thread).
+        $outputQueue = [System.Collections.Concurrent.ConcurrentQueue[string]]::new()
+
+        $outputHandler = {
+            param($sender, $eventArgs)
+            if ($null -ne $eventArgs.Data) {
+                $Event.MessageData.Enqueue($eventArgs.Data)
+            }
+        }
+        $errorHandler = {
+            param($sender, $eventArgs)
+            if ($null -ne $eventArgs.Data) {
+                $Event.MessageData.Enqueue($eventArgs.Data)
+            }
+        }
+
         $proc = New-Object System.Diagnostics.Process
         $proc.StartInfo = $psi
-        [void]$proc.Start()
 
-        $proc.StandardInput.Close()
+        $stdoutSub = Register-ObjectEvent -InputObject $proc -EventName OutputDataReceived -Action $outputHandler -MessageData $outputQueue
+        $stderrSub = Register-ObjectEvent -InputObject $proc -EventName ErrorDataReceived  -Action $errorHandler  -MessageData $outputQueue
 
-        while (-not $proc.HasExited) {
-            while (-not $proc.StandardOutput.EndOfStream) {
-                WriteLogLine -OutputBox $textOutput -Message $proc.StandardOutput.ReadLine()
+        try {
+            [void]$proc.Start()
+            $proc.BeginOutputReadLine()
+            $proc.BeginErrorReadLine()
+            $proc.StandardInput.Close()
+
+            # Drain queue while child runs; never block on a stream read.
+            $line = $null
+            while (-not $proc.HasExited) {
+                while ($outputQueue.TryDequeue([ref]$line)) {
+                    WriteLogLine -OutputBox $textOutput -Message $line
+                }
+                [System.Windows.Forms.Application]::DoEvents()
+                [void]$proc.WaitForExit(25)
             }
-            while (-not $proc.StandardError.EndOfStream) {
-                WriteLogLine -OutputBox $textOutput -Message $proc.StandardError.ReadLine()
-            }
-            [void]$proc.WaitForExit(25)
-        }
 
-        while (-not $proc.StandardOutput.EndOfStream) {
-            WriteLogLine -OutputBox $textOutput -Message $proc.StandardOutput.ReadLine()
-        }
-        while (-not $proc.StandardError.EndOfStream) {
-            WriteLogLine -OutputBox $textOutput -Message $proc.StandardError.ReadLine()
+            # Ensure all buffered async data has been flushed, then drain remaining queue.
+            $proc.WaitForExit()
+            while ($outputQueue.TryDequeue([ref]$line)) {
+                WriteLogLine -OutputBox $textOutput -Message $line
+            }
+        } finally {
+            Unregister-Event -SubscriptionId $stdoutSub.Id -ErrorAction SilentlyContinue
+            Unregister-Event -SubscriptionId $stderrSub.Id -ErrorAction SilentlyContinue
+            if ($stdoutSub) { Remove-Job -Job $stdoutSub -Force -ErrorAction SilentlyContinue }
+            if ($stderrSub) { Remove-Job -Job $stderrSub -Force -ErrorAction SilentlyContinue }
         }
 
         if ($proc.ExitCode -ne 0) {
