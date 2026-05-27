@@ -12,6 +12,9 @@ param(
     [Parameter(Mandatory=$false, ParameterSetName='Create')]
     [switch]$Build,
 
+    [Parameter(Mandatory=$false, ParameterSetName='Create')]
+    [switch]$NonInteractive,
+
     [Parameter(Mandatory=$true, ParameterSetName='Help')]
     [switch]$Help
 )
@@ -284,10 +287,18 @@ function PromptBuild {
         [ref]$SkippedBuild,
 
         [Parameter(Mandatory=$true)]
-        [ref]$BuildPromptShown
+        [ref]$BuildPromptShown,
+
+        [switch]$NonInteractive
     )
 
     if ((Test-Path $BuildFile) -or $SkippedBuild.Value -or $BuildPromptShown.Value) {
+        return
+    }
+
+    if ($NonInteractive) {
+        Write-Host "Skipping ModFramework build (non-interactive mode). Build it later with -Build or via Visual Studio." -ForegroundColor Yellow
+        $SkippedBuild.Value = $true
         return
     }
 
@@ -458,7 +469,7 @@ if ($IsFirstRun -or $PSBoundParameters.ContainsKey('GameDir')) {
         Write-Host "Updated ModFramework.csproj with game directory: $GameDir" -ForegroundColor Green
 
         if (-not $Build) {
-            PromptBuild -ProjectRoot $RootDir -BuildFile $BuildFile -SkippedBuild ([ref]$SkippedBuild) -BuildPromptShown ([ref]$BuildPromptShown)
+            PromptBuild -ProjectRoot $RootDir -BuildFile $BuildFile -SkippedBuild ([ref]$SkippedBuild) -BuildPromptShown ([ref]$BuildPromptShown) -NonInteractive:$NonInteractive
         }
     } else {
         Write-Host "WARNING: Could not find ModFramework.csproj_template at $CsprojTemplate" -ForegroundColor Yellow
@@ -532,7 +543,7 @@ if ($Build) {
         $SkippedBuild = $true
     }
 } else {
-    PromptBuild -ProjectRoot $RepoRoot -BuildFile $BuildFile -SkippedBuild ([ref]$SkippedBuild) -BuildPromptShown ([ref]$BuildPromptShown)
+    PromptBuild -ProjectRoot $RepoRoot -BuildFile $BuildFile -SkippedBuild ([ref]$SkippedBuild) -BuildPromptShown ([ref]$BuildPromptShown) -NonInteractive:$NonInteractive
 }
 
 Show-Summary -ModName $ModName -TargetDir $TargetDir -GameDir $GameDir -IsModFrameworkBuilt (Test-Path $BuildFile) -ModFrameworkBin $ModFrameworkBin -ModFrameworkCsprojUpdated $ModFrameworkCsprojUpdated

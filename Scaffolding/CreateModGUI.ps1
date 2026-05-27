@@ -342,6 +342,10 @@ $btnRun.Add_Click({
             $argList.Add("-Build")
         }
 
+        # Always pass -NonInteractive so CreateMod.ps1 never blocks on a Read-Host prompt.
+        # All required values are pre-validated and supplied by the GUI.
+        $argList.Add("-NonInteractive")
+
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = "powershell.exe"
         $psi.UseShellExecute = $false
@@ -357,10 +361,6 @@ $btnRun.Add_Click({
         $proc.StartInfo = $psi
         [void]$proc.Start()
 
-        if (-not $buildRequested) {
-            $proc.StandardInput.WriteLine("N")
-            $proc.StandardInput.Flush()
-        }
         $proc.StandardInput.Close()
 
         while (-not $proc.HasExited) {
