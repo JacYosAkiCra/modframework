@@ -293,7 +293,8 @@ function PromptBuild {
 
     $BuildPromptShown.Value = $true
     $response = Read-HostOrExit "Would you like to build ModFramework now? (Y/N)"
-    if ($response -eq 'Y') {
+    $normalizedResponse = $response.Trim()
+    if (@('Y', 'Yes') -contains $normalizedResponse) {
         if (-not (Invoke-ModFrameworkBuild -ProjectRoot $ProjectRoot -BuildFile $BuildFile)) {
             $SkippedBuild.Value = $true
         }
