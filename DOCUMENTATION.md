@@ -86,10 +86,10 @@ ModFramework/
 |-- Scaffolding/                    (Mod Generator)
 |   |-- CreateMod.ps1               PowerShell script to scaffold a new mod project using PowerShell
 |   |-- CreateModGUI.ps1            PowerShell script to scaffold a new mod project using GUI
-    |-- Templates/
+|   |-- Templates/
 |       |-- MainBehaviour.cs_template
 |       |-- Mod.csproj_template
-        |-- ModFramework.csproj_template
+|       |-- ModFramework.csproj_template
 |       |-- ModMeta.json_template
 |       |-- meta.tyd_template
 ```
