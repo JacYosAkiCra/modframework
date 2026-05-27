@@ -65,12 +65,17 @@
   <ItemGroup>
     <Compile Include="{MOD_NAME}Behaviour.cs" />
     <Compile Include="{MOD_NAME}Meta.cs" />
+    <!-- ModFramework Core -->
+    <Compile Include="..\ModFramework\ModFramework.cs">
+      <Link>ModFramework\ModFramework.cs</Link>
+    </Compile>
     <Compile Include="..\ModFramework\Core\ModSafety.cs">
       <Link>ModFramework\Core\ModSafety.cs</Link>
     </Compile>
     <Compile Include="..\ModFramework\Core\ModUtils.cs">
       <Link>ModFramework\Core\ModUtils.cs</Link>
     </Compile>
+    <!-- ModFramework GameData -->
     <Compile Include="..\ModFramework\GameData\ModCompanyHelper.cs">
       <Link>ModFramework\GameData\ModCompanyHelper.cs</Link>
     </Compile>
@@ -82,6 +87,28 @@
     </Compile>
     <Compile Include="..\ModFramework\GameData\ModProductHelper.cs">
       <Link>ModFramework\GameData\ModProductHelper.cs</Link>
+    </Compile>
+    <!-- ModFramework V5 UI -->
+    <Compile Include="..\ModFramework\UI\CustomAccordion.cs">
+      <Link>ModFramework\UI\CustomAccordion.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\UI\CustomCardLayout.cs">
+      <Link>ModFramework\UI\CustomCardLayout.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\UI\CustomCharts.cs">
+      <Link>ModFramework\UI\CustomCharts.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\UI\CustomContextMenu.cs">
+      <Link>ModFramework\UI\CustomContextMenu.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\UI\CustomNodeGraph.cs">
+      <Link>ModFramework\UI\CustomNodeGraph.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\UI\CustomSplitPane.cs">
+      <Link>ModFramework\UI\CustomSplitPane.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\UI\CustomUIParser.cs">
+      <Link>ModFramework\UI\CustomUIParser.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>
