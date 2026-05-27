@@ -39,12 +39,8 @@
       <HintPath>{GAME_DIRECTORY}\Software Inc_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ModFramework">
-      <HintPath>..\ModFramework\bin\Release\ModFramework.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="0Harmony">
-      <HintPath>..\ModFramework\bin\Release\0Harmony.dll</HintPath>
+      <HintPath>..\ModFramework\Harmony\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -68,14 +64,42 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="{MOD_NAME}Behaviour.cs" />
+    <Compile Include="{MOD_NAME}Meta.cs" />
+    <Compile Include="..\ModFramework\Core\ModSafety.cs">
+      <Link>ModFramework\Core\ModSafety.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\Core\ModUtils.cs">
+      <Link>ModFramework\Core\ModUtils.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\GameData\ModCompanyHelper.cs">
+      <Link>ModFramework\GameData\ModCompanyHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\GameData\ModEmployeeHelper.cs">
+      <Link>ModFramework\GameData\ModEmployeeHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\GameData\ModMarketHelper.cs">
+      <Link>ModFramework\GameData\ModMarketHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\ModFramework\GameData\ModProductHelper.cs">
+      <Link>ModFramework\GameData\ModProductHelper.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="UI.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="meta.tyd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
-echo Copying DLL to Local Mods Directory...
+echo Copying DLL and XML to Local Mods Directory...
 mkdir "%25AppData%25\..\LocalLow\Coredumping\Software Inc\Mods\{MOD_NAME}"
 copy /Y "$(TargetDir)$(TargetName).dll" "%25AppData%25\..\LocalLow\Coredumping\Software Inc\Mods\{MOD_NAME}\$(TargetName).dll"
-copy /Y "$(ProjectDir)\ModMeta.json" "%25AppData%25\..\LocalLow\Coredumping\Software Inc\Mods\{MOD_NAME}\ModMeta.json"
+copy /Y "$(ProjectDir)\meta.tyd" "%25AppData%25\..\LocalLow\Coredumping\Software Inc\Mods\{MOD_NAME}\meta.tyd"
+copy /Y "$(ProjectDir)\UI.xml" "%25AppData%25\..\LocalLow\Coredumping\Software Inc\Mods\{MOD_NAME}\UI.xml"
     </PostBuildEvent>
   </PropertyGroup>
 </Project>
